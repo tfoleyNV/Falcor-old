@@ -214,6 +214,24 @@ namespace Falcor
         return attachConstantBuffer(loc, pCB);
     }
 
+    uint32_t ProgramVars::getSamplerLocation(const char* samplerName)
+    {
+        const ProgramReflection::Resource* pDesc = mpReflector->getResourceDesc(samplerName);
+        if (pDesc == nullptr)
+        {
+            Logger::log(Logger::Level::Warning, std::string("Texture \"") + samplerName + "\" was not found. Ignoring setSampler() call.");
+            return kInvalidLocation;
+        }
+
+        if (pDesc->type != ProgramReflection::Resource::ResourceType::Sampler)
+        {
+            Logger::log(Logger::Level::Warning, std::string("ProgramVars::setSampler() was called, but variable \"") + samplerName + "\" is not a sampler. Ignoring call.");
+            return kInvalidLocation;
+        }
+
+        return pDesc->regIndex;
+    }
+
     bool ProgramVars::setSampler(uint32_t index, const Sampler::SharedConstPtr& pSampler)
     {
         mAssignedSamplers[index].pResource = pSampler;
@@ -222,20 +240,12 @@ namespace Falcor
 
     bool ProgramVars::setSampler(const std::string& name, const Sampler::SharedConstPtr& pSampler)
     {
-        const ProgramReflection::Resource* pDesc = mpReflector->getResourceDesc(name);
-        if (pDesc == nullptr)
+        uint32_t loc = getSamplerLocation(name.c_str());
+        if (loc == kInvalidLocation)
         {
-            Logger::log(Logger::Level::Warning, "Texture \"" + name + "\" was not found. Ignoring setSampler() call.");
             return false;
         }
-
-        if (pDesc->type != ProgramReflection::Resource::ResourceType::Sampler)
-        {
-            Logger::log(Logger::Level::Warning, "ProgramVars::setSampler() was called, but variable \"" + name + "\" is not a sampler. Ignoring call.");
-            return false;
-        }
-
-        return setSampler(pDesc->regIndex, pSampler);
+        return setSampler(loc, pSampler);
     }
 
     bool ProgramVars::setTexture(uint32_t index, const Texture::SharedConstPtr& pTexture, uint32_t firstArraySlice, uint32_t arraySize, uint32_t mostDetailedMip, uint32_t mipCount)
@@ -273,22 +283,34 @@ namespace Falcor
         }
     }
 
-    bool ProgramVars::setTexture(const std::string& name, const Texture::SharedConstPtr& pTexture, uint32_t firstArraySlice, uint32_t arraySize, uint32_t mostDetailedMip, uint32_t mipCount)
+    uint32_t ProgramVars::getTextureLocation(const char* texName)
     {
-        const ProgramReflection::Resource* pDesc = mpReflector->getResourceDesc(name);
+        const ProgramReflection::Resource* pDesc = mpReflector->getResourceDesc(texName);
         if (pDesc == nullptr)
         {
-            Logger::log(Logger::Level::Warning, "Texture \"" + name + "\" was not found. Ignoring setTexture() call.");
-            return false;
+            Logger::log(Logger::Level::Warning, std::string("Texture \"") + texName + "\" was not found. Ignoring setTexture() call.");
+            return kInvalidLocation;
         }
 
         if (pDesc->type != ProgramReflection::Resource::ResourceType::Texture)
         {
-            Logger::log(Logger::Level::Warning, "ProgramVars::setTexture() was called, but variable \"" + name + "\" is not a texture. Ignoring call.");
+            Logger::log(Logger::Level::Warning, std::string("ProgramVars::setTexture() was called, but variable \"") + texName + "\" is not a texture. Ignoring call.");
+            return kInvalidLocation;
+        }
+        return pDesc->regIndex;
+    }
+
+    bool ProgramVars::setTexture(const std::string& name, const Texture::SharedConstPtr& pTexture, uint32_t firstArraySlice, uint32_t arraySize, uint32_t mostDetailedMip, uint32_t mipCount)
+    {
+        uint32_t index = getTextureLocation(name.c_str());
+        if(index != kInvalidLocation)
+        {
+            return setTexture(index, pTexture, firstArraySlice, arraySize, mostDetailedMip, mipCount);
+        }
+        else
+        {
             return false;
         }
-
-        return setTexture(pDesc->regIndex, pTexture, firstArraySlice, arraySize, mostDetailedMip, mipCount);
     }
 
     void ProgramVars::setIntoRenderContext(RenderContext* pContext) const

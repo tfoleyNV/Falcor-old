@@ -37,7 +37,7 @@ namespace Falcor
     {
         bool CheckParams(const std::string& Func, uint32_t width, uint32_t height, uint32_t arraySize, uint32_t mipLevels, uint32_t sampleCount)
         {
-            std::string msg = "CFramebuffer::" + Func + "() - ";
+            std::string msg = "FboHelper::" + Func + "() - ";
             std::string Param;
 
             if(mipLevels == 0)
@@ -50,9 +50,9 @@ namespace Falcor
                 Param = "arraySize";
             else
             {
-                if(sampleCount > 0 && mipLevels > 1)
+                if(sampleCount > 1 && mipLevels > 1)
                 {
-                    Logger::log(Logger::Level::Error, msg + "can't create multisampled texture with more than one mip-level. sampleCount = " + std::to_string(sampleCount) + ", mipLevels = " + std::to_string(mipLevels) + ".");
+                    logError(msg + "can't create multisampled texture with more than one mip-level. sampleCount = " + std::to_string(sampleCount) + ", mipLevels = " + std::to_string(mipLevels) + ".");
                     return false;
                 }
                 return true;

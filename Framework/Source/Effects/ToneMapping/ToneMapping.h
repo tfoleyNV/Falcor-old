@@ -105,19 +105,21 @@ namespace Falcor
         FullScreenPass::UniquePtr mpLuminancePass;
         Fbo::SharedPtr mpLuminanceFbo;
 
-        ConstantBuffer::SharedPtr mpCb;
+        ProgramVars::SharedPtr mpProgramVars;
         Sampler::SharedPtr mpPointSampler;
         Sampler::SharedPtr mpLinearSampler;
 
         struct  
         {
-            size_t colorTex;
-            size_t luminanceTex;
+            uint32_t colorTex;
+            uint32_t pointSampler;
+            uint32_t linearSampler;
+            uint32_t luminanceTex;
             size_t middleGray;
             size_t maxWhiteLuminance;
             size_t luminanceLod;
             size_t whiteScale;
-        } mCbOffsets;
+        } mVarsOffsets;
 
         void createToneMapPass(Operator op);
         void createLuminancePass();

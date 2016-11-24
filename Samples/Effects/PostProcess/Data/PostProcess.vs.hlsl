@@ -25,55 +25,20 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ***************************************************************************/
-#version 430
-#include "hlslglslcommon.h"
+#include "VertexAttrib.h"
 
-#define PI 3.141591
-
-UNIFORM_BUFFER (PerFrameCB, 0)
+cbuffer PerFrameCB : register(b0)
 {
-    mat4 gWorldMat;
-    mat4 gWvpMat;
-    sampler2D gEnvMap;
-    vec3 gEyePosW;
+    float4x4 gWorldMat;
+    float4x4 gWvpMat;
+    float3 gEyePosW;
     float gLightIntensity;
     float gSurfaceRoughness;
 };
 
-vec4 calcColor(vec3 normalW, vec3 posW)
+void main(in float4 posL : POSITION, in float3 normalL : NORMAL, out float3 normalW : NORMAL, out float3 posW : POSITION, out float4 svPos : SV_POSITION)
 {
-    vec3 p = normalize(normalW);
-    vec2 uv;
-    uv.x = ( 1 + atan(-p.z, p.x) / PI) * 0.5;
-    uv.y = -acos(p.y) / PI;
-    vec4 color = texture(gEnvMap, uv);
-    color.rgb *= gLightIntensity;
-#ifdef _TEXTURE_ONLY
-    return color;
-#endif
-    // compute halfway vector
-    vec3 eyeDir = normalize(gEyePosW - posW);
-    vec3 h = normalize(eyeDir + normalW);
-    float edoth = dot(eyeDir, h);
-    float intensity = pow(clamp(edoth, 0, 1), gSurfaceRoughness);
-
-    color.rgb *= intensity;
-    return color;
+    posW = (mul(gWvpMat,posL)).xyz;
+	svPos = mul(gWvpMat,posL);
+	normalW = (mul(gWorldMat, float4(normalL, 0))).xyz;
 }
-
-#ifdef FALCOR_HLSL
-vec4 main(in vec3 normalW : NORMAL, in vec3 posW : POSITION) : SV_TARGET
-{
-    return calcColor(normalW, posW);
-}
-
-#else
-in vec3 normalW;
-in vec3 posW;
-out vec4 fragColor;
-
-void main()
-{
-    fragColor = calcColor(normalW, posW);
-}
-#endif

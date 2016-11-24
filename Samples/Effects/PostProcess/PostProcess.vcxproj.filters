@@ -7,10 +7,10 @@
     <ClInclude Include="PostProcess.h" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="Data\PostProcess.vs">
+    <None Include="Data\PostProcess.vs.hlsl">
       <Filter>Data</Filter>
     </None>
-    <None Include="Data\PostProcess.fs">
+    <None Include="Data\PostProcess.ps.hlsl">
       <Filter>Data</Filter>
     </None>
   </ItemGroup>

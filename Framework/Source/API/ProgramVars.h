@@ -56,6 +56,7 @@ namespace Falcor
 
         using SharedConstPtr = std::shared_ptr<const ProgramVars>;
 
+        static const uint32_t kInvalidLocation = -1;
         /** Create a new object
             \param[in] pReflector A program reflection object containing the requested declarations
             \param[in] createBuffers If true, will create the ConstantBuffer objects. Otherwise, the user will have to bind the CBs himself
@@ -185,6 +186,10 @@ namespace Falcor
         template<typename T> using ResourceDataMap = std::unordered_map<uint32_t, ResourceData<T>>;
 
         void setIntoRenderContext(RenderContext* pContext) const;
+
+        uint32_t getTextureLocation(const char* texName);
+        uint32_t getSamplerLocation(const char* samplerName);
+
     private:
         ProgramVars(const ProgramReflection::SharedConstPtr& pReflector, bool createBuffers, const RootSignature::SharedConstPtr& pRootSig);
 

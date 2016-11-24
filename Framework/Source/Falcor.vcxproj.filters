@@ -2010,9 +2010,6 @@
     <None Include="Data\Framework\FullScreenPass.gs">
       <Filter>Data\Framework</Filter>
     </None>
-    <None Include="Data\Effects\ToneMapping.fs">
-      <Filter>Data\Effects</Filter>
-    </None>
     <None Include="Data\Effects\GaussianBlur.fs">
       <Filter>Data\Effects</Filter>
     </None>
@@ -2036,6 +2033,9 @@
     </None>
     <None Include="Data\Framework\Gui.vs">
       <Filter>Data\Framework</Filter>
+    </None>
+    <None Include="Data\Effects\ToneMapping.ps.hlsl">
+      <Filter>Data\Effects</Filter>
     </None>
   </ItemGroup>
   <ItemGroup>

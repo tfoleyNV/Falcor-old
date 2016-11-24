@@ -32,7 +32,7 @@
 
 namespace Falcor
 {
-    static const char* kShaderFilename = "Effects\\ToneMapping.fs";
+    static const char* kShaderFilename = "Effects\\ToneMapping.ps.hlsl";
 
     ToneMapping::~ToneMapping() = default;
 
@@ -84,15 +84,17 @@ namespace Falcor
         createLuminanceFbo(pSrc);
 
         // Bind the CB
-        mpCb->setTexture(mCbOffsets.colorTex, pSrc->getColorTexture(0).get(), mpPointSampler.get());
-        mpCb->setTexture(mCbOffsets.luminanceTex, mpLuminanceFbo->getColorTexture(0).get(), mpLinearSampler.get());
-        mpCb->setVariable(mCbOffsets.middleGray, mMiddleGray);
-        mpCb->setVariable(mCbOffsets.maxWhiteLuminance, mWhiteMaxLuminance);
-        mpCb->setVariable(mCbOffsets.luminanceLod, mLuminanceLod);
-        mpCb->setVariable(mCbOffsets.whiteScale, mWhiteScale);
+        mpProgramVars->setTexture(mVarsOffsets.colorTex, pSrc->getColorTexture(0));
+        mpProgramVars->setTexture(mVarsOffsets.luminanceTex, mpLuminanceFbo->getColorTexture(0));
+        mpProgramVars->setSampler(mVarsOffsets.pointSampler, mpPointSampler);
+        mpProgramVars->setSampler(mVarsOffsets.linearSampler, mpLinearSampler);
+//         ConstantBuffer::SharedPtr& pCB = mpProgramVars["PerImageCB"];
+//         pCB[mVarsOffsets.middleGray] = mMiddleGray;
+//         pCB[mVarsOffsets.maxWhiteLuminance] = mWhiteMaxLuminance;
+//         pCB[mVarsOffsets.luminanceLod] = mLuminanceLod;
+//         pCB[mVarsOffsets.whiteScale] = mWhiteScale;
 
-        // DISABLED_FOR_D3D12
-//        pRenderContext->setUniformBuffer(0, mpUbo);
+        pRenderContext->pushProgramVars(mpProgramVars);
 
         // Calculate luminance
         pState->setFbo(mpLuminanceFbo);
@@ -104,6 +106,7 @@ namespace Falcor
         
         mpToneMapPass->execute(pRenderContext);
         pState->popFbo();
+        pRenderContext->popProgramVars();
     }
 
     void ToneMapping::createToneMapPass(ToneMapping::Operator op)
@@ -136,13 +139,20 @@ namespace Falcor
         }
 
         // Initialize the CB offsets
-        mpCb = ConstantBuffer::create(mpLuminancePass->getProgram(), "PerImageCB");
-        mCbOffsets.luminanceTex = mpCb->getVariableOffset("gLuminanceTex");
-        mCbOffsets.colorTex = mpCb->getVariableOffset("gColorTex");
-        mCbOffsets.middleGray = mpCb->getVariableOffset("gMiddleGray");
-        mCbOffsets.maxWhiteLuminance = mpCb->getVariableOffset("gMaxWhiteLuminance");
-        mCbOffsets.luminanceLod = mpCb->getVariableOffset("gLuminanceLod");
-        mCbOffsets.whiteScale = mpCb->getVariableOffset("gWhiteScale");
+        mpProgramVars = ProgramVars::create(mpLuminancePass->getProgram()->getActiveVersion()->getReflector());
+        mVarsOffsets.luminanceTex = mpProgramVars->getTextureLocation("gLuminanceTex");
+        mVarsOffsets.colorTex = mpProgramVars->getTextureLocation("gColorTex");
+        mVarsOffsets.pointSampler = mpProgramVars->getSamplerLocation("gPointSampler");
+        mVarsOffsets.linearSampler = mpProgramVars->getSamplerLocation("gLinearSampler");
+
+        const ConstantBuffer* pCB = mpProgramVars["PerImageCB"].get();
+        if(pCB)
+        {
+            mVarsOffsets.middleGray = pCB->getVariableOffset("gMiddleGray");
+            mVarsOffsets.maxWhiteLuminance = pCB->getVariableOffset("gMaxWhiteLuminance");
+            mVarsOffsets.luminanceLod = pCB->getVariableOffset("gLuminanceLod");
+            mVarsOffsets.whiteScale = pCB->getVariableOffset("gWhiteScale");
+        }
     }
 
     void ToneMapping::createLuminancePass()

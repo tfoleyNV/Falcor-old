@@ -121,7 +121,8 @@ namespace Falcor
 
         D3D12_CLEAR_VALUE clearValue = {};
         D3D12_CLEAR_VALUE* pClearVal = nullptr;
-        if (isCompressedFormat(texFormat) == false)
+        // FIXME D3D12 need a more robust solution
+        if (isCompressedFormat(texFormat) == false && texFormat != ResourceFormat::RGB32Float)
         {
             desc.Flags = isDepthStencilFormat(texFormat) ? D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL : D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET;
             clearValue.Format = desc.Format;

@@ -38,6 +38,7 @@ public:
     void onResizeSwapChain() override;
     bool onKeyEvent(const KeyboardEvent& keyEvent) override;
     bool onMouseEvent(const MouseEvent& mouseEvent) override;
+    void onGuiRender() override;
 
 private:
     Model::SharedPtr mpSphere;
@@ -48,8 +49,7 @@ private:
     float mLightIntensity = 1.0f;
     float mSurfaceRoughness = 5.0f;
 
-    void initUI();
-    void renderMesh(const Mesh* pMesh, const Program* pProgram, RasterizerState::SharedPtr pRastState, float scale);
+    void renderMesh(const Mesh* pMesh, const Program::SharedPtr& pProgram, RasterizerState::SharedPtr pRastState, float scale);
 
     Sampler::SharedPtr mpTriLinearSampler;
 
@@ -60,9 +60,9 @@ private:
     } mSkybox;
 
     Program::SharedPtr mpEnvMapProgram;
-    UniformBuffer::SharedPtr mpPerFrameCB;
+    ProgramVars::SharedPtr mpProgVars;
 
-    enum HdrImage
+    enum HdrImage : uint32_t
     {
         EveningSun,
         OvercastDay,
@@ -74,6 +74,4 @@ private:
     ToneMapping::UniquePtr mpToneMapper;
 
     void loadImage();
-    static void GUI_CALL getHdrImage(void* pVal, void* pThis);
-    static void GUI_CALL setHdrImage(const void* pVal, void* pThis);
 };
