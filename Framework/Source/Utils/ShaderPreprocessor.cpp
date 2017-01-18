@@ -33,8 +33,11 @@
 #include <cctype>
 #include <set>
 
+#include "Externals/Spire/Spire.h"
+
 namespace Falcor
 {
+#if 0
     size_t npos = std::string::npos;
 
     bool isInComment(const std::string& str, size_t offset)
@@ -253,6 +256,77 @@ namespace Falcor
         return getLinePragma(line, filename);
     }
 
+    static bool endsWith(const std::string& str, const char* suffix)
+    {
+        size_t strLen = str.length();
+        size_t suffixLen = strlen(suffix);
+        if (strLen < suffixLen) return false;
+        return strcmp(str.c_str() + (strLen - suffixLen), suffix) == 0;
+    }
+#endif
+
+    static bool checkSpireErrors(
+        SpireDiagnosticSink* spireSink,
+        std::string& outDiagnostics)
+    {
+        int diagnosticsSize = spGetDiagnosticOutput(spireSink, NULL, 0);
+        if (diagnosticsSize != 0)
+        {
+            char* diagnostics = (char*)malloc(diagnosticsSize);
+            spGetDiagnosticOutput(spireSink, diagnostics, diagnosticsSize);
+            outDiagnostics += diagnostics;
+            free(diagnostics);
+        }
+
+        return spDiagnosticSinkHasAnyErrors(spireSink) != 0;
+    }
+
+#if 0
+    static bool translateSpireToTargetShadingLanguage(
+        const std::string& path,
+        const std::string& spireContent,
+        std::string& outTranslatedContent,
+        std::string& outDiagnostics)
+    {
+        // TODO: actually invoke Spire compiler here
+
+        SpireCompilationContext* spireContext = spCreateCompilationContext(NULL);
+
+        SpireDiagnosticSink* spireSink = spCreateDiagnosticSink(spireContext);
+
+#if defined(FALCOR_GL)
+        spSetCodeGenTarget(spireContext, SPIRE_GLSL);
+#elif defined(FACLOR_D3D11)
+        spSetCodeGenTarget(spireContext, SPIRE_HLSL);
+#else
+#error unknown shader compilation target
+#endif
+
+        spLoadModuleLibraryFromSource(spireContext, spireContent.c_str(), path.c_str(), spireSink);
+        if (checkSpireErrors(spireSink, outDiagnostics))
+        {
+            spDestroyDiagnosticSink(spireSink);
+            spDestroyCompilationContext(spireContext);
+            return false;
+        }
+
+        SpireCompilationResult* result = spCompileShaderFromSource(spireContext, "", "", spireSink);
+        if (checkSpireErrors(spireSink, outDiagnostics))
+        {
+            spDestroyDiagnosticSink(spireSink);
+            spDestroyCompilationContext(spireContext);
+            return false;
+        }
+
+        outTranslatedContent = spGetShaderStageSource(result, NULL, NULL, NULL);
+
+        spDestroyCompilationResult(result);
+        spDestroyDiagnosticSink(spireSink);
+        spDestroyCompilationContext(spireContext);
+
+        return true;
+    }
+
     bool ShaderPreprocessor::addIncludes(std::string& code)
     {
         auto getDirAbs = [](const std::string& path) -> std::string 
@@ -304,6 +378,11 @@ namespace Falcor
             {
                 // Path is relative to including file, and may include Falcor builtins.
 
+                // Search for Falcor builtin written in Spire
+                // Note: checking for this before an ordinary builtin ensures that stale
+                // files hanging out in the directory tree don't cause as many problems.
+                if(findFileInDataDirectories(includedPathRaw + ".spire", includedPathAbs)) goto SUCCESS;
+
                 // Search for Falcor builtin
                 if(findFileInDataDirectories(includedPathRaw, includedPathAbs)) goto SUCCESS;
 
@@ -321,7 +400,21 @@ namespace Falcor
 
             // Read the included file.
             std::string includedContent;
-            readFileToString(includedPathAbs, includedContent);
+            if(endsWith(includedPathAbs, ".spire"))
+            {
+                std::string spireContent;
+                std::string spireDiagnostics;
+                readFileToString(includedPathAbs, spireContent);
+                if(!translateSpireToTargetShadingLanguage(includedPathAbs, spireContent, includedContent, spireDiagnostics))
+                {
+                    mErrorStr += spireDiagnostics;
+                    return false;
+                }
+            }
+            else
+            {
+                readFileToString(includedPathAbs, includedContent);
+            }
 
             // Add a trailing newline as required.  TODO: emit a warning while doing this.
             if(!includedContent.empty() && includedContent.back() != '\n')
@@ -962,9 +1055,71 @@ namespace Falcor
         mErrorStr.clear();
         mDefineMap.clear();
     }
+#endif
 
     bool ShaderPreprocessor::parseShader(const std::string& filename, std::string& shader, std::string& errorMsg, const Program::DefineList& shaderDefines)
     {
+        // TODO: actually invoke Spire compiler here
+
+        SpireCompilationContext* spireContext = spCreateCompilationContext(NULL);
+
+        // TODO: Spire should really support a callback API for all file I/O,
+        // rather than having us specify data directories to it...
+        for (auto path : getDataDirectoriesList())
+        {
+            spAddSearchPath(spireContext, path.c_str());
+        }
+
+        spAddPreprocessorDefine(spireContext, "__SPIRE__", "1");
+        spAddPreprocessorDefine(spireContext, "FALCOR_HLSL", "1");
+
+        SpireDiagnosticSink* spireSink = spCreateDiagnosticSink(spireContext);
+
+#if defined(FALCOR_GL)
+        spSetCodeGenTarget(spireContext, SPIRE_GLSL);
+#elif defined(FALCOR_DX11)
+        spSetCodeGenTarget(spireContext, SPIRE_HLSL);
+#else
+#error unknown shader compilation target
+#endif
+
+#if 0
+        spLoadModuleLibraryFromSource(spireContext, shader.c_str(), filename.c_str(), spireSink);
+        if (checkSpireErrors(spireSink, errorMsg))
+        {
+            spDestroyDiagnosticSink(spireSink);
+            spDestroyCompilationContext(spireContext);
+            return false;
+        }
+#endif
+
+        SpireCompilationResult* result = spCompileShaderFromSource(spireContext, shader.c_str(), filename.c_str(), spireSink);
+        if (checkSpireErrors(spireSink, errorMsg))
+        {
+            spDestroyDiagnosticSink(spireSink);
+            spDestroyCompilationContext(spireContext);
+            return false;
+        }
+
+        shader = spGetShaderStageSource(result, NULL, NULL, NULL);
+
+        spDestroyCompilationResult(result);
+        spDestroyDiagnosticSink(spireSink);
+        spDestroyCompilationContext(spireContext);
+
+        return true;
+
+
+
+
+
+
+
+
+
+
+
+#if 0
         ShaderPreprocessor preProc(errorMsg);
 
         preProc.mShaderPathAbs = canonicalizeFilename(filename);
@@ -979,5 +1134,6 @@ namespace Falcor
             return true;
         }
         return false;
+#endif
     }
 }

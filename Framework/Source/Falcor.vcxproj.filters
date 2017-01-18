@@ -166,6 +166,7 @@
     <ClCompile Include="Graphics\Model\Loaders\BinaryImage.cpp">
       <Filter>Graphics\Model\Loaders</Filter>
     </ClCompile>
+<<<<<<< HEAD
     <ClCompile Include="Graphics\Program.cpp">
       <Filter>Graphics</Filter>
     </ClCompile>
@@ -453,6 +454,9 @@
       <Filter>Graphics\Model\Loaders</Filter>
     </ClCompile>
     <ClCompile Include="ArgList.cpp">
+      <Filter>Utils</Filter>
+    </ClCompile>
+    <ClCompile Include="Utils\SpireSupport.cpp">
       <Filter>Utils</Filter>
     </ClCompile>
   </ItemGroup>

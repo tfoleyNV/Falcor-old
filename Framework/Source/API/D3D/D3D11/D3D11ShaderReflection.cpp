@@ -300,7 +300,10 @@ namespace Falcor
                 reflectVariable(pReflector, pVar, variableMap);
             }
 
+// HACK(tfoley): This logic is wrong
+#if TIMREMOVED
             assert(calcStructSize(variableMap) == bufferDesc.Size);
+#endif
         }
 
         static ShaderResourceDesc::ResourceType getResourceType(D3D_SHADER_INPUT_TYPE type)
