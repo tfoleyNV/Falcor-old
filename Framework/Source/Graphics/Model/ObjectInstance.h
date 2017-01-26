@@ -179,6 +179,11 @@ namespace Falcor
             return mFinalTransformMatrix;
         }
 
+        /** Gets the base transform matrix
+            \return Base transform matrix
+        */
+        const glm::mat4& getBaseTransformMatrix() const { return mBaseTransformMatrix; }
+
         /** Gets the bounding box
             \return Bounding box
         */

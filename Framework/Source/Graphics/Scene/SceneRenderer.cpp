@@ -183,16 +183,20 @@ namespace Falcor
 
                 if ((mCullEnabled == false) || (pCamera->isObjectCulled(box) == false))
                 {
-                    if (setPerMeshInstanceData(pContext, translation, meshInstance, activeInstances, currentData))
+                    if (meshInstance->isVisible())
                     {
-                        activeInstances++;
-
-                        if (activeInstances == mMaxInstanceCount)
+                        if (setPerMeshInstanceData(pContext, translation, meshInstance, activeInstances, currentData))
                         {
-                            // DISABLED_FOR_D3D12
-                            //pContext->setProgram(currentData.pProgram->getActiveProgramVersion());
-                            flushDraw(pContext, pMesh, activeInstances, currentData);
-                            activeInstances = 0;
+                            currentData.drawID++;
+                            activeInstances++;
+
+                            if (activeInstances == mMaxInstanceCount)
+                            {
+                                // DISABLED_FOR_D3D12
+                                //pContext->setProgram(currentData.pProgram->getActiveProgramVersion());
+                                flushDraw(pContext, pMesh, activeInstances, currentData);
+                                activeInstances = 0;
+                            }
                         }
                     }
                 }
@@ -271,6 +275,7 @@ namespace Falcor
         currentData.pCamera = pCamera;
         currentData.pMaterial = nullptr;
         currentData.pModel = nullptr;
+        currentData.drawID = 1;
         setupVR();
         setPerFrameData(pContext, currentData);
 

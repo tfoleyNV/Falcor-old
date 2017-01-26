@@ -112,6 +112,8 @@ namespace Falcor
             mutable GraphicsState* pGsoCache;
             const Model* pModel;
             const Material* pMaterial;
+
+            uint32_t drawID;
         };
 
         SceneRenderer(const Scene::SharedPtr& pScene);
@@ -122,7 +124,6 @@ namespace Falcor
         static size_t sWorldMatOffset;
         static size_t sMeshIdOffset;
 
-    private:
         static void updateVariableOffsets(const ProgramReflection* pReflector);
 
         virtual void setPerFrameData(RenderContext* pContext, const CurrentWorkingData& currentData);
@@ -136,7 +137,6 @@ namespace Falcor
         void renderMeshInstances(RenderContext* pContext, uint32_t modelID, const glm::mat4& translation, Camera* pCamera, CurrentWorkingData& currentData);
         void flushDraw(RenderContext* pContext, const Mesh* pMesh, uint32_t instanceCount, CurrentWorkingData& currentData);
 
-    protected:
         void setupVR();
 
         CameraControllerType mCamControllerType = CameraControllerType::SixDof;

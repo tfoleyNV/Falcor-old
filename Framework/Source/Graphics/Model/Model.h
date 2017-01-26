@@ -71,6 +71,8 @@ namespace Falcor
         */
         static SharedPtr createFromFile(const std::string& filename, uint32_t flags);
 
+        static SharedPtr create();
+
         static const char* kSupportedFileFormatsStr;
 
         ~Model();
@@ -207,17 +209,15 @@ namespace Falcor
         */
         static void resetGlobalIdCounter();
 
-    protected:
-        friend class AssimpModelImporter;
-        friend class BinaryModelImporter;
-        friend class SimpleModelImporter;
-
-        Model();
-        void setAnimationController(AnimationController::UniquePtr pAnimController);
-
         void addMeshInstance(const Mesh::SharedPtr& pMesh, const glm::mat4& transform);
 
+        void addMeshInstance(const MeshInstance::SharedPtr& pMeshInstance);
+
+        void setAnimationController(AnimationController::UniquePtr pAnimController);
+
     private:
+
+        Model();
 
         void sortMeshes();
         void deleteCulledMeshInstances(MeshInstanceList& meshInstances, const Camera *pCamera);
@@ -243,7 +243,7 @@ namespace Falcor
 
         static uint32_t sModelCounter;
 
-        void calculateModelProperties();
+        void calculateModelProperties(); // #TODO Dirty flag
         void compressAllTextures();
     };
 }
