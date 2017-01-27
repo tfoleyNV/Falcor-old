@@ -320,25 +320,28 @@ namespace Falcor
         wireframeDesc.setFillMode(RasterizerState::FillMode::Wireframe);
         wireframeDesc.setCullMode(RasterizerState::CullMode::None);
         wireframeDesc.setDepthBias(-1, 0.0f);
-        mpBiasWireframe = RasterizerState::create(wireframeDesc);
+        mpBiasWireframeRS = RasterizerState::create(wireframeDesc);
 
         // Depth test
         DepthStencilState::Desc dsDesc;
         dsDesc.setDepthTest(true);
-        mpDepthState = DepthStencilState::create(dsDesc);
+        mpDepthTestDS = DepthStencilState::create(dsDesc);
 
         mpRenderContext = gpDevice->getRenderContext();
 
         auto backBufferFBO = gpDevice->getSwapChainFbo();
         mpPicking = Picking::create(mpScene, backBufferFBO->getWidth(), backBufferFBO->getHeight());
 
+        mpSelectionScene = Scene::create((float)backBufferFBO->getWidth() / (float)backBufferFBO->getHeight());
+        mpSelectionSceneRenderer = SceneRenderer::create(mpSelectionScene);
+
         // Create graphics state for drawing wireframe
         mpWireframeProgram = GraphicsProgram::createFromFile("", "Wireframe.ps.hlsl");
 
         mpGraphicsState = GraphicsState::create();
         mpGraphicsState->setProgram(mpWireframeProgram);
-        mpGraphicsState->setRasterizerState(mpBiasWireframe);
-        mpGraphicsState->setDepthStencilState(mpDepthState);
+        mpGraphicsState->setRasterizerState(mpBiasWireframeRS);
+        mpGraphicsState->setDepthStencilState(mpDepthTestDS);
     }
 
     SceneEditor::~SceneEditor()
@@ -354,14 +357,10 @@ namespace Falcor
 
     void SceneEditor::renderSelection()
     {
-        if (mpSelectionModel)
-        {
-            // Draw to same Fbo that was set before this call
-            mpGraphicsState->setFbo(mpRenderContext->getGraphicsState()->getFbo());
-            mpRenderContext->setGraphicsState(mpGraphicsState);
-
-            ModelRenderer::render(mpRenderContext.get(), mpSelectionModel, mpScene->getActiveCamera().get());
-        }
+        // Draw to same Fbo that was set before this call
+        mpGraphicsState->setFbo(mpRenderContext->getGraphicsState()->getFbo());
+        mpRenderContext->setGraphicsState(mpGraphicsState);
+        mpSelectionSceneRenderer->renderScene(mpRenderContext.get(), mpScene->getActiveCamera().get());
     }
 
     bool SceneEditor::onMouseEvent(const MouseEvent& mouseEvent)
@@ -375,24 +374,15 @@ namespace Falcor
         {
             if (mMouseHoldTimer.getElapsedTime() < 0.2f)
             {
-                mpPicking->pick(mpRenderContext.get(), mouseEvent.pos, mpScene->getActiveCamera().get());
-
-                auto pModelInstance = mpPicking->getPickedModelInstance();
-                auto pMeshInstance = mpPicking->getPickedMeshInstance();
-                if (pModelInstance && pMeshInstance)
+                if (mpPicking->pick(mpRenderContext.get(), mouseEvent.pos, mpScene->getActiveCamera().get()))
                 {
-                    addToSelection(pModelInstance, pMeshInstance, mControlDown);
+                    addToSelection(mpPicking->getPickedModelInstance(), mControlDown);
                 }
                 else
                 {
                     deselect();
                 }
             }
-        }
-
-        if (mouseEvent.type == MouseEvent::Type::RightButtonUp)
-        {
-            deselect();
         }
 
         return true;
@@ -584,15 +574,10 @@ namespace Falcor
         }
     }
     
-    void SceneEditor::addToSelection(const Scene::ModelInstance::SharedPtr& pModelInstance, const Model::MeshInstance::SharedPtr& pMeshInstance, bool append)
+    void SceneEditor::addToSelection(const Scene::ModelInstance::SharedPtr& pModelInstance, bool append)
     {
-        // We cannot compare just mesh instance ID. The same mesh instance drawn at a different model instance should be different.
-        uint64_t modelPtr = (uint64_t)pModelInstance.get();
-        uint64_t meshptr = (uint64_t)pMeshInstance.get();
-        const uint64_t instanceIdentifier = modelPtr ^ meshptr;
-
-        // If mesh has already been picked, ignore it
-        if (mSelectedInstances.count(instanceIdentifier) > 0)
+        // If instance has already been picked, ignore it
+        if (mSelectedInstances.count(pModelInstance.get()) > 0)
         {
             return;
         }
@@ -602,23 +587,20 @@ namespace Falcor
             deselect();
         }
 
-        if (mpSelectionModel == nullptr)
-        {
-            mpSelectionModel = Model::create();
-        }
-
-        mpSelectionModel->addMeshInstance(pMeshInstance->getObject(), pModelInstance->getTransformMatrix() * pMeshInstance->getTransformMatrix());
-
-        // #TEST
+        mpSelectionScene->addModelInstance(pModelInstance);
         setActiveModelInstance(pModelInstance);
 
         // Track selection
-        mSelectedInstances.insert(instanceIdentifier);
+        mSelectedInstances.insert(pModelInstance.get());
     }
 
     void SceneEditor::deselect()
     {
-        mpSelectionModel = nullptr;
+        if (mpSelectionScene)
+        {
+            mpSelectionScene->deleteAllModels();
+        }
+
         mSelectedInstances.clear();
     }
 

@@ -122,7 +122,7 @@ namespace Falcor
         uint32_t mSceneLoadFlags = 0;
 
         // Picking
-        void addToSelection(const Scene::ModelInstance::SharedPtr& pModelInstance, const Model::MeshInstance::SharedPtr& pMeshInstance, bool append);
+        void addToSelection(const Scene::ModelInstance::SharedPtr& pModelInstance, bool append);
         void deselect();
 
         RenderContext::SharedPtr mpRenderContext;
@@ -133,10 +133,11 @@ namespace Falcor
         
         GraphicsState::SharedPtr mpGraphicsState;
         GraphicsProgram::SharedPtr mpWireframeProgram;
-        RasterizerState::SharedPtr mpBiasWireframe;
-        DepthStencilState::SharedPtr mpDepthState;
+        RasterizerState::SharedPtr mpBiasWireframeRS;
+        DepthStencilState::SharedPtr mpDepthTestDS;
 
-        Model::SharedPtr mpSelectionModel;
-        std::set<uint64_t> mSelectedInstances;
+        Scene::SharedPtr mpSelectionScene; // Holds selection in model selection mode
+        SceneRenderer::UniquePtr mpSelectionSceneRenderer;
+        std::set<Scene::ModelInstance*> mSelectedInstances;
     };
 }
