@@ -413,6 +413,29 @@ namespace Falcor
         }
     }
 
+    void SceneEditor::setActiveModelInstance(const Scene::ModelInstance::SharedPtr& pModelInstance)
+    {
+        for (uint32_t modelID = 0; modelID < mpScene->getModelCount(); modelID++)
+        {
+            // Model found, look for exact instance
+            if (mpScene->getModel(modelID) == pModelInstance->getObject())
+            {
+                for (uint32_t instanceID = 0; instanceID < mpScene->getModelInstanceCount(modelID); instanceID++)
+                {
+                    // Instance found
+                    if (mpScene->getModelInstance(modelID, instanceID) == pModelInstance)
+                    {
+                        mActiveModel = modelID;
+                        mActiveModelInstance = instanceID;
+                        return;
+                    }
+                }
+
+                return;
+            }
+        }
+    }
+
     void SceneEditor::renderModelElements(Gui* pGui)
     {
         if(pGui->beginGroup(kModelsStr))
@@ -585,6 +608,9 @@ namespace Falcor
         }
 
         mpSelectionModel->addMeshInstance(pMeshInstance->getObject(), pModelInstance->getTransformMatrix() * pMeshInstance->getTransformMatrix());
+
+        // #TEST
+        setActiveModelInstance(pModelInstance);
 
         // Track selection
         mSelectedInstances.insert(instanceIdentifier);

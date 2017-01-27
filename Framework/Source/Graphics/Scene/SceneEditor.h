@@ -51,6 +51,8 @@ namespace Falcor
         bool onKeyEvent(const KeyboardEvent& keyEvent);
         void onResizeSwapChain();
 
+        void setActiveModelInstance(const Scene::ModelInstance::SharedPtr& pModelInstance);
+
     private:
         SceneEditor(const Scene::SharedPtr& pScene, const uint32_t modelLoadFlags);
         Scene::SharedPtr mpScene;
