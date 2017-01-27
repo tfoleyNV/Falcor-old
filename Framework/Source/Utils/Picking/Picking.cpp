@@ -33,7 +33,6 @@
 namespace Falcor
 {
     size_t Picking::sDrawIDOffset = ConstantBuffer::kInvalidOffset;
-    static const char* kPerStaticMeshCbName = "InternalPerStaticMeshCB";
 
     Picking::UniquePtr Picking::create(const Scene::SharedPtr& pScene, uint32_t fboWidth, uint32_t fboHeight)
     {
@@ -45,24 +44,17 @@ namespace Falcor
         calculateScissor(mousePos);
         renderScene(pContext, pCamera);
         readPickResults(pContext);
-        return mPickResults != 0;
+        return mPickResult.pModelInstance != nullptr;
     }
 
     ObjectInstance<Mesh>::SharedPtr Picking::getPickedMeshInstance() const
     {
-        auto it = mDrawIDToInstance.find(mPickResults);
-
-        if (it == mDrawIDToInstance.end())
-        {
-            return nullptr;
-        }
-
-        return it->second;
+        return mPickResult.pMeshInstance;
     }
 
     ObjectInstance<Model>::SharedPtr Picking::getPickedModelInstance() const
     {
-        return nullptr;
+        return mPickResult.pModelInstance;
     }
 
     void Picking::resizeFBO(uint32_t width, uint32_t height)
@@ -125,32 +117,30 @@ namespace Falcor
 
     void Picking::readPickResults(RenderContext* pContext)
     {
-        mPickResults = 0;
-
         std::vector<uint8_t> textureData = pContext->readTextureSubresource(mpFBO->getColorTexture(0).get(), 0);
         uint16_t* pData = (uint16_t*)textureData.data();
 
-        // #TODO MATH
+        uint32_t i = mScissor.originY * mpFBO->getWidth() + mScissor.originX;
 
-        const uint32_t elements = (uint32_t)textureData.size() / 2;
-        for (uint32_t i = 0; i < elements; i++)
+        if (pData[i] != 0)
         {
-            if (pData[i] != 0)
-            {
-                mPickResults = pData[i];
-                return;
-            }
+            mPickResult = mDrawIDToInstance[pData[i]];
+        }
+        else
+        {
+            // Nullptrs
+            mPickResult = Instance();
         }
     }
 
-    bool Picking::setPerMeshInstanceData(RenderContext* pContext, const glm::mat4& translation, const Model::MeshInstance::SharedPtr& instance, uint32_t drawInstanceID, const CurrentWorkingData& currentData)
+    bool Picking::setPerMeshInstanceData(RenderContext* pContext, const Scene::ModelInstance::SharedPtr& pModelInstance, const Model::MeshInstance::SharedPtr& pMeshInstance, uint32_t drawInstanceID, const CurrentWorkingData& currentData)
     {
         ConstantBuffer* pCB = pContext->getGraphicsVars()->getConstantBuffer(kPerStaticMeshCbName).get();
         pCB->setBlob(&currentData.drawID, sDrawIDOffset + drawInstanceID * sizeof(uint32_t), sizeof(uint32_t));
 
-        mDrawIDToInstance[currentData.drawID] = instance;
+        mDrawIDToInstance[currentData.drawID] = Instance(pModelInstance, pMeshInstance);
 
-        return SceneRenderer::setPerMeshInstanceData(pContext, translation, instance, drawInstanceID, currentData);
+        return SceneRenderer::setPerMeshInstanceData(pContext, pModelInstance, pMeshInstance, drawInstanceID, currentData);
     }
 
     bool Picking::setPerMaterialData(RenderContext* pContext, const CurrentWorkingData& currentData)

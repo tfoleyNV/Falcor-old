@@ -144,6 +144,12 @@ namespace Falcor
         */
         uint32_t getMeshInstanceCount(uint32_t meshID) const { return meshID >= mMeshes.size() ? 0 : (uint32_t)(mMeshes[meshID].size()); }
 
+        /** Adds a new mesh instance
+            \param[in] pMesh Mesh geometry
+            \param[in] baseTransform Base transform for the instance
+        */
+        void addMeshInstance(const Mesh::SharedPtr& pMesh, const glm::mat4& baseTransform);
+
         /** Check if the model contains animations
         */
         bool hasAnimations() const;
@@ -172,6 +178,10 @@ namespace Falcor
         /** Turn animation on and select active animation. Changing the active animation will cause the new animation to play from the beginning
         */
         uint32_t getActiveAnimation() const;
+
+        /** Set the animation controller for the model
+        */
+        void setAnimationController(AnimationController::UniquePtr pAnimController);
 
         /** Check if the model has bones
         */
@@ -209,13 +219,8 @@ namespace Falcor
         */
         static void resetGlobalIdCounter();
 
-        void addMeshInstance(const Mesh::SharedPtr& pMesh, const glm::mat4& transform);
-
-        void addMeshInstance(const MeshInstance::SharedPtr& pMeshInstance);
-
-        void setAnimationController(AnimationController::UniquePtr pAnimController);
-
     private:
+        friend class SimpleModelImporter;
 
         Model();
 
@@ -243,7 +248,7 @@ namespace Falcor
 
         static uint32_t sModelCounter;
 
-        void calculateModelProperties(); // #TODO Dirty flag
+        void calculateModelProperties();
         void compressAllTextures();
     };
 }

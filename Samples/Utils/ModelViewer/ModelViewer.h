@@ -27,13 +27,12 @@
 ***************************************************************************/
 #pragma once
 #include "Falcor.h"
-#include "Utils/Picking/Picking.h"
 
 using namespace Falcor;
 
 class ModelViewer : public Sample
 {
-public:    
+public:
     void onLoad() override;
     void onFrameRender() override;
     void onShutdown() override;
@@ -51,18 +50,6 @@ private:
     void resetCamera();
     void setModelUIElements();
     void setModelString(bool isAfterCull, float LoadTime);
-
-    // PICKING TEST
-    void addToSelection(const Model::MeshInstance::SharedPtr& pInstance, bool append);
-    void deselect();
-    Picking::UniquePtr mpPicking;
-    Scene::SharedPtr mpScene;
-    Model::SharedPtr mpPickedModel;
-    bool mControlDown = false;
-    CpuTimer mMouseHoldTimer;
-    RasterizerState::SharedPtr mpBiasWireframe;
-    std::set<Model::MeshInstance*> mPickedMeshInstances;
-    // PICKING TEST
 
     Model::SharedPtr mpModel = nullptr;
     ModelViewCameraController mModelViewCameraController;

@@ -124,7 +124,7 @@ namespace Falcor
         pModel->addMeshInstance(pMesh, glm::mat4()); // Add this mesh to the model
 
         // Do internal computations on model properties
-        // #TODO pModel->calculateModelProperties();
+        pModel->calculateModelProperties();
 
         // Done
         return pModel;

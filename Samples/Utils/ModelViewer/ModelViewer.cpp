@@ -103,10 +103,6 @@ void ModelViewer::loadModel()
     if(openFileDialog(Model::kSupportedFileFormatsStr, Filename))
     {
         loadModelFromFile(Filename);
-        mpScene = Scene::create();
-        mpScene->addModelInstance(mpModel, "");
-
-        mpPicking = Picking::create(mpScene, mpDefaultFBO->getWidth(), mpDefaultFBO->getHeight());
     }
 }
 
@@ -233,11 +229,6 @@ void ModelViewer::onLoad()
     wireframeDesc.setCullMode(RasterizerState::CullMode::None);
     mpWireframeRS = RasterizerState::create(wireframeDesc);
 
-    // PICKING TEST
-    wireframeDesc.setDepthBias(-1, 0.0f);
-    mpBiasWireframe = RasterizerState::create(wireframeDesc);
-    // PICKING TEST
-
     RasterizerState::Desc solidDesc;
     solidDesc.setCullMode(RasterizerState::CullMode::None);
     mpCullRastState[0] = RasterizerState::create(solidDesc);
@@ -320,18 +311,8 @@ void ModelViewer::onFrameRender()
         mpGraphicsState->setProgram(mpProgram);
         mpRenderContext->setGraphicsState(mpGraphicsState);
         mpRenderContext->setGraphicsVars(mpProgramVars);
-
         ModelRenderer::render(mpRenderContext.get(), mpModel, mpCamera.get());
     }
-
-    // PICKING TEST
-    if (mpPickedModel)
-    {
-        mpGraphicsState->setRasterizerState(mpBiasWireframe);
-        mpProgramVars["PerFrameCB"]["gConstColor"] = true;
-        ModelRenderer::render(mpRenderContext.get(), mpPickedModel, mpCamera.get());
-    }
-    // PICKING TEST
 
     renderText(mModelString, glm::vec2(10, 30));
 }
@@ -343,8 +324,6 @@ void ModelViewer::onShutdown()
 
 bool ModelViewer::onKeyEvent(const KeyboardEvent& keyEvent)
 {
-    mControlDown = keyEvent.mods.isCtrlDown;
-
     bool bHandled = getActiveCameraController().onKeyEvent(keyEvent);
     if(bHandled == false)
     {
@@ -364,68 +343,7 @@ bool ModelViewer::onKeyEvent(const KeyboardEvent& keyEvent)
 
 bool ModelViewer::onMouseEvent(const MouseEvent& mouseEvent)
 {
-    // PICKING TEST
-    if (mouseEvent.type == MouseEvent::Type::LeftButtonDown || mouseEvent.type == MouseEvent::Type::LeftButtonUp)
-    {
-        mMouseHoldTimer.update();
-    }
-
-    if (mouseEvent.type == MouseEvent::Type::LeftButtonUp)
-    {
-        if (mMouseHoldTimer.getElapsedTime() < 0.1f)
-        {
-            mMouseHoldTimer.update();
-
-            mpPicking->pick(mpRenderContext.get(), mouseEvent.pos, mpCamera.get());
-            auto pInstance = mpPicking->getPickedMeshInstance();
-            if (pInstance)
-            {
-                addToSelection(pInstance, mControlDown);
-            }
-            else
-            {
-                deselect();
-            }
-        }
-    }
-
-    if (mouseEvent.type == MouseEvent::Type::RightButtonUp)
-    {
-        deselect();
-    }
-    // PICKING TEST
-
     return getActiveCameraController().onMouseEvent(mouseEvent);
-}
-
-void ModelViewer::addToSelection(const Model::MeshInstance::SharedPtr& pInstance, bool append)
-{
-    // If mesh has already been picked, ignore it
-    if (mPickedMeshInstances.count(pInstance.get()))
-    {
-        return;
-    }
-
-    if (append == false)
-    {
-        deselect();
-    }
-
-    if (mpPickedModel == nullptr)
-    {
-        mpPickedModel = Model::create();
-    }
-
-    mpPickedModel->addMeshInstance(pInstance);
-
-    // Track selection
-    mPickedMeshInstances.insert(pInstance.get());
-}
-
-void ModelViewer::deselect()
-{
-    mpPickedModel = nullptr;
-    mPickedMeshInstances.clear();
 }
 
 void ModelViewer::onResizeSwapChain()

@@ -33,7 +33,8 @@
 #include "Utils/OS.h"
 #include "SceneExporter.h"
 #include "Graphics/Model/AnimationController.h"
-#include "Graphics/Paths/PathEditor.h"
+#include "API/Device.h"
+#include "Graphics/Model/ModelRenderer.h"
 
 namespace Falcor
 {
@@ -310,7 +311,35 @@ namespace Falcor
         return UniquePtr(new SceneEditor(pScene, modelLoadFlags));
     }
 
-    SceneEditor::SceneEditor(const Scene::SharedPtr& pScene, uint32_t modelLoadFlags) : mpScene(pScene), mModelLoadFlags(modelLoadFlags) {}
+    SceneEditor::SceneEditor(const Scene::SharedPtr& pScene, uint32_t modelLoadFlags) 
+        : mpScene(pScene)
+        , mModelLoadFlags(modelLoadFlags) 
+    {
+        // Rasterizer State for rendering wireframe of selected object
+        RasterizerState::Desc wireframeDesc;
+        wireframeDesc.setFillMode(RasterizerState::FillMode::Wireframe);
+        wireframeDesc.setCullMode(RasterizerState::CullMode::None);
+        wireframeDesc.setDepthBias(-1, 0.0f);
+        mpBiasWireframe = RasterizerState::create(wireframeDesc);
+
+        // Depth test
+        DepthStencilState::Desc dsDesc;
+        dsDesc.setDepthTest(true);
+        mpDepthState = DepthStencilState::create(dsDesc);
+
+        mpRenderContext = gpDevice->getRenderContext();
+
+        auto backBufferFBO = gpDevice->getSwapChainFbo();
+        mpPicking = Picking::create(mpScene, backBufferFBO->getWidth(), backBufferFBO->getHeight());
+
+        // Create graphics state for drawing wireframe
+        mpWireframeProgram = GraphicsProgram::createFromFile("", "Wireframe.ps.hlsl");
+
+        mpGraphicsState = GraphicsState::create();
+        mpGraphicsState->setProgram(mpWireframeProgram);
+        mpGraphicsState->setRasterizerState(mpBiasWireframe);
+        mpGraphicsState->setDepthStencilState(mpDepthState);
+    }
 
     SceneEditor::~SceneEditor()
     {
@@ -320,6 +349,67 @@ namespace Falcor
             {
                 saveScene();
             }
+        }
+    }
+
+    void SceneEditor::renderSelection()
+    {
+        if (mpSelectionModel)
+        {
+            // Draw to same Fbo that was set before this call
+            mpGraphicsState->setFbo(mpRenderContext->getGraphicsState()->getFbo());
+            mpRenderContext->setGraphicsState(mpGraphicsState);
+
+            ModelRenderer::render(mpRenderContext.get(), mpSelectionModel, mpScene->getActiveCamera().get());
+        }
+    }
+
+    bool SceneEditor::onMouseEvent(const MouseEvent& mouseEvent)
+    {
+        if (mouseEvent.type == MouseEvent::Type::LeftButtonDown || mouseEvent.type == MouseEvent::Type::LeftButtonUp)
+        {
+            mMouseHoldTimer.update();
+        }
+
+        if (mouseEvent.type == MouseEvent::Type::LeftButtonUp)
+        {
+            if (mMouseHoldTimer.getElapsedTime() < 0.2f)
+            {
+                mpPicking->pick(mpRenderContext.get(), mouseEvent.pos, mpScene->getActiveCamera().get());
+
+                auto pModelInstance = mpPicking->getPickedModelInstance();
+                auto pMeshInstance = mpPicking->getPickedMeshInstance();
+                if (pModelInstance && pMeshInstance)
+                {
+                    addToSelection(pModelInstance, pMeshInstance, mControlDown);
+                }
+                else
+                {
+                    deselect();
+                }
+            }
+        }
+
+        if (mouseEvent.type == MouseEvent::Type::RightButtonUp)
+        {
+            deselect();
+        }
+
+        return true;
+    }
+
+    bool SceneEditor::onKeyEvent(const KeyboardEvent& keyEvent)
+    {
+        mControlDown = keyEvent.mods.isCtrlDown;
+        return true;
+    }
+
+    void SceneEditor::onResizeSwapChain()
+    {
+        if (mpPicking)
+        {
+            auto backBufferFBO = gpDevice->getSwapChainFbo();
+            mpPicking->resizeFBO(backBufferFBO->getWidth(), backBufferFBO->getHeight());
         }
     }
 
@@ -425,7 +515,7 @@ namespace Falcor
         }
     }
 
-    void SceneEditor::render(Gui* pGui)
+    void SceneEditor::renderGui(Gui* pGui)
     {
         pGui->pushWindow("Scene Editor", 300, 300, 100, 250);
         if (pGui->addButton("Export Scene"))
@@ -471,6 +561,41 @@ namespace Falcor
         }
     }
     
+    void SceneEditor::addToSelection(const Scene::ModelInstance::SharedPtr& pModelInstance, const Model::MeshInstance::SharedPtr& pMeshInstance, bool append)
+    {
+        // We cannot compare just mesh instance ID. The same mesh instance drawn at a different model instance should be different.
+        uint64_t modelPtr = (uint64_t)pModelInstance.get();
+        uint64_t meshptr = (uint64_t)pMeshInstance.get();
+        const uint64_t instanceIdentifier = modelPtr ^ meshptr;
+
+        // If mesh has already been picked, ignore it
+        if (mSelectedInstances.count(instanceIdentifier) > 0)
+        {
+            return;
+        }
+
+        if (append == false)
+        {
+            deselect();
+        }
+
+        if (mpSelectionModel == nullptr)
+        {
+            mpSelectionModel = Model::create();
+        }
+
+        mpSelectionModel->addMeshInstance(pMeshInstance->getObject(), pModelInstance->getTransformMatrix() * pMeshInstance->getTransformMatrix());
+
+        // Track selection
+        mSelectedInstances.insert(instanceIdentifier);
+    }
+
+    void SceneEditor::deselect()
+    {
+        mpSelectionModel = nullptr;
+        mSelectedInstances.clear();
+    }
+
     void SceneEditor::addModel(Gui* pGui)
     {
         if (pGui->addButton("Add Model"))
@@ -642,4 +767,5 @@ namespace Falcor
             }
         }
     }
+
 }

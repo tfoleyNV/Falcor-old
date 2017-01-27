@@ -292,11 +292,6 @@ namespace Falcor
         mMeshes[meshID].push_back(MeshInstance::create(pMesh, baseTransform));
     }
 
-    void Model::addMeshInstance(const MeshInstance::SharedPtr& pMeshInstance)
-    {
-        addMeshInstance(pMeshInstance->getObject(), pMeshInstance->getBaseTransformMatrix());
-    }
-
     void Model::sortMeshes()
     {
         // Sort meshes by material ptr

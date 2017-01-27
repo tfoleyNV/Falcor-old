@@ -47,8 +47,8 @@ namespace Falcor
         */
         bool pick(RenderContext* pContext, const glm::vec2& mousePos, Camera* pCamera);
 
-        ObjectInstance<Mesh>::SharedPtr getPickedMeshInstance() const;
-        ObjectInstance<Model>::SharedPtr getPickedModelInstance() const;
+        Model::MeshInstance::SharedPtr getPickedMeshInstance() const;
+        Scene::ModelInstance::SharedPtr getPickedModelInstance() const;
 
         void resizeFBO(uint32_t width, uint32_t height);
 
@@ -59,7 +59,7 @@ namespace Falcor
         void renderScene(RenderContext* pContext, Camera* pCamera);
         void readPickResults(RenderContext* pContext);
 
-        virtual bool setPerMeshInstanceData(RenderContext* pContext, const glm::mat4& translation, const Model::MeshInstance::SharedPtr& instance, uint32_t drawInstanceID, const CurrentWorkingData& currentData) override;
+        virtual bool setPerMeshInstanceData(RenderContext* pContext, const Scene::ModelInstance::SharedPtr& pModelInstance, const Model::MeshInstance::SharedPtr& pMeshInstance, uint32_t drawInstanceID, const CurrentWorkingData& currentData) override;
         virtual bool setPerMaterialData(RenderContext* pContext, const CurrentWorkingData& currentData) override;
 
         void calculateScissor(const glm::vec2& mousePos);
@@ -68,9 +68,19 @@ namespace Falcor
 
         static size_t sDrawIDOffset;
 
-        std::unordered_map<uint32_t, ObjectInstance<Mesh>::SharedPtr> mDrawIDToInstance;
+        struct Instance
+        {
+            Scene::ModelInstance::SharedPtr pModelInstance;
+            Model::MeshInstance::SharedPtr pMeshInstance;
 
-        uint32_t mPickResults = 0;
+            Instance() {}
+
+            Instance(Scene::ModelInstance::SharedPtr pModelInstance, Model::MeshInstance::SharedPtr pMeshInstance)
+                : pModelInstance(pModelInstance), pMeshInstance(pMeshInstance) {}
+        };
+
+        std::unordered_map<uint32_t, Instance> mDrawIDToInstance;
+        Instance mPickResult;
 
         Fbo::SharedPtr mpFBO;
         GraphicsProgram::SharedPtr mpProgram;
@@ -78,6 +88,5 @@ namespace Falcor
         GraphicsState::SharedPtr mpGraphicsState;
 
         GraphicsState::Scissor mScissor;
-        glm::vec2 mMousePos; // #TODO REMOVE THIS
     };
 }

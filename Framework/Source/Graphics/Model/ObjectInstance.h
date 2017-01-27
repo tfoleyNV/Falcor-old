@@ -28,9 +28,7 @@
 
 #pragma once
 
-#include "Framework.h"
 #include "Graphics/Paths/MovableObject.h"
-#include "Graphics/Model/Mesh.h"
 #include "Utils/AABB.h"
 #include "glm/mat4x4.hpp"
 #include "glm/gtc/matrix_transform.hpp"
@@ -179,11 +177,6 @@ namespace Falcor
             return mFinalTransformMatrix;
         }
 
-        /** Gets the base transform matrix
-            \return Base transform matrix
-        */
-        const glm::mat4& getBaseTransformMatrix() const { return mBaseTransformMatrix; }
-
         /** Gets the bounding box
             \return Bounding box
         */
@@ -193,8 +186,7 @@ namespace Falcor
             return mBoundingBox;
         }
 
-        /**
-            IMovableObject interface
+        /** IMovableObject interface
         */
         virtual void move(const glm::vec3& position, const glm::vec3& target, const glm::vec3& up) override
         {
