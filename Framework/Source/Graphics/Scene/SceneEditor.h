@@ -121,6 +121,11 @@ namespace Falcor
         uint32_t mModelLoadFlags = 0;
         uint32_t mSceneLoadFlags = 0;
 
+        // Gets and caches Euler rotations from model instances in the scene
+        void initializeEulerRotationsCache();
+
+        std::vector<std::vector<glm::vec3>> mInstanceEulerRotations;
+
         // Picking
         void addToSelection(const Scene::ModelInstance::SharedPtr& pModelInstance, bool append);
         void deselect();

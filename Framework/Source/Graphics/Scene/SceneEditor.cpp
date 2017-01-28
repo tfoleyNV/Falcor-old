@@ -224,20 +224,20 @@ namespace Falcor
         vec3 t = pInstance->getTranslation();
         if (pGui->addFloat3Var("Translation", t, -FLT_MAX, FLT_MAX))
         {
-            pInstance->setTranslation(t);
+            pInstance->setTranslation(t, true);
             mSceneDirty = true;
         }
     }
 
     void SceneEditor::setInstanceRotation(Gui* pGui)
     {
-        auto& pInstance = mpScene->getModelInstance(mActiveModel, mActiveModelInstance);
-        vec3 r = pInstance->getEulerRotation();
+        vec3 r = mInstanceEulerRotations[mActiveModel][mActiveModelInstance];
         r = degrees(r);
         if (pGui->addFloat3Var("Rotation", r, -360, 360))
         {
             r = radians(r);
-            pInstance->setRotation(r);
+            mInstanceEulerRotations[mActiveModel][mActiveModelInstance] = r;
+            mpScene->getModelInstance(mActiveModel, mActiveModelInstance)->setRotation(r);
             mSceneDirty = true;
         }
     }
@@ -319,7 +319,7 @@ namespace Falcor
         RasterizerState::Desc wireframeDesc;
         wireframeDesc.setFillMode(RasterizerState::FillMode::Wireframe);
         wireframeDesc.setCullMode(RasterizerState::CullMode::None);
-        wireframeDesc.setDepthBias(-1, 0.0f);
+        wireframeDesc.setDepthBias(-2, 0.0f);
         mpBiasWireframeRS = RasterizerState::create(wireframeDesc);
 
         // Depth test
@@ -342,6 +342,8 @@ namespace Falcor
         mpGraphicsState->setProgram(mpWireframeProgram);
         mpGraphicsState->setRasterizerState(mpBiasWireframeRS);
         mpGraphicsState->setDepthStencilState(mpDepthTestDS);
+
+        initializeEulerRotationsCache();
     }
 
     SceneEditor::~SceneEditor()
@@ -574,6 +576,19 @@ namespace Falcor
         }
     }
     
+    void SceneEditor::initializeEulerRotationsCache()
+    {
+        for (uint32_t modelID = 0; modelID < mpScene->getModelCount(); modelID++)
+        {
+            mInstanceEulerRotations.emplace_back();
+
+            for (uint32_t instanceID = 0; instanceID < mpScene->getModelInstanceCount(modelID); instanceID++)
+            {
+                mInstanceEulerRotations[modelID].push_back(mpScene->getModelInstance(modelID, instanceID)->getEulerRotation());
+            }
+        }
+    }
+
     void SceneEditor::addToSelection(const Scene::ModelInstance::SharedPtr& pModelInstance, bool append)
     {
         // If instance has already been picked, ignore it
@@ -631,6 +646,9 @@ namespace Falcor
 
                 mActiveModel = mpScene->getModelCount() - 1;
                 mActiveModelInstance = 0;
+
+                mInstanceEulerRotations.emplace_back();
+                mInstanceEulerRotations.back().push_back(mpScene->getModelInstance(mActiveModel, mActiveModelInstance)->getEulerRotation());
             }
             mSceneDirty = true;
         }
@@ -639,6 +657,7 @@ namespace Falcor
     void SceneEditor::deleteModel()
     {
         mpScene->deleteModel(mActiveModel);
+        mInstanceEulerRotations.erase(mInstanceEulerRotations.begin() + mActiveModel);
         mActiveModel = 0;
         mActiveModelInstance = 0;
         mSceneDirty = true;
@@ -664,6 +683,7 @@ namespace Falcor
 
             mActiveModelInstance = mpScene->getModelInstanceCount(mActiveModel);
             mpScene->addModelInstance(pModel, "Instance " + mActiveModelInstance, pInstance->getTranslation(), pInstance->getEulerRotation(), pInstance->getScaling());
+            mInstanceEulerRotations[mActiveModel].push_back(mpScene->getModelInstance(mActiveModel, mActiveModelInstance)->getEulerRotation());
 
             mSceneDirty = true;
         }
@@ -688,6 +708,10 @@ namespace Falcor
             }
 
             mpScene->deleteModelInstance(mActiveModel, mActiveModelInstance);
+
+            auto& modelRotations = mInstanceEulerRotations[mActiveModel];
+            modelRotations.erase(modelRotations.begin() + mActiveModelInstance);
+
             mActiveModelInstance = 0;
             mSceneDirty = true;
         }

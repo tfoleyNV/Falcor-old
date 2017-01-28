@@ -213,6 +213,16 @@ namespace Falcor
         */
         const std::string& getName() const { return mName; }
 
+        /** Set the model's filename
+        */
+        void setFilename(const std::string& filename) { mFilename = filename; }
+
+        /** Get the model's filename
+        */
+        const std::string& getFilename() const { return mFilename; }
+
+        /** Get global ID of the model
+        */
         const uint32_t getId() const { return mId; }
         
         /** Reset all global id counter of model, mesh and material
@@ -245,6 +255,7 @@ namespace Falcor
         AnimationController::UniquePtr mpAnimationController;
 
         std::string mName;
+        std::string mFilename;
 
         static uint32_t sModelCounter;
 

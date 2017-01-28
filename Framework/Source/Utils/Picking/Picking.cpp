@@ -87,7 +87,7 @@ namespace Falcor
 
         // Rasterizer State
         RasterizerState::Desc rsDesc;
-        rsDesc.setCullMode(RasterizerState::CullMode::Back);
+        rsDesc.setCullMode(RasterizerState::CullMode::None);
         mpGraphicsState->setRasterizerState(RasterizerState::create(rsDesc));
     }
 

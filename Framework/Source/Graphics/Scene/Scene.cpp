@@ -119,7 +119,7 @@ namespace Falcor
             modelID = (int32_t)mModels.size() - 1;
         }
 
-        mModels[modelID].push_back(ModelInstance::create(pModel, translation, rotation, scaling));
+        mModels[modelID].push_back(ModelInstance::create(pModel, translation, rotation, scaling, false));
     }
 
     void Scene::addModelInstance(const ModelInstance::SharedPtr& pInstance)

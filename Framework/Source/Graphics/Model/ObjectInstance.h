@@ -33,6 +33,8 @@
 #include "glm/mat4x4.hpp"
 #include "glm/gtc/matrix_transform.hpp"
 #include "glm/gtx/euler_angles.hpp"
+#include "glm/common.hpp"
+#include "glm/gtx/common.hpp"
 
 namespace Falcor 
 {
@@ -64,12 +66,25 @@ namespace Falcor
             \param[in] target Base look-at target of the instance
             \param[in] up Base up vector of the instance
             \param[in] scale Base scale of the instance
+            \param[in] setBaseTransform If true, initializes base transform with transformation arguments. Otherwise base transform is identity, and arguments are applied to the instance.
             \param[in] name Name of the instance
             \return A new instance of the object
         */
-        static SharedPtr create(const typename ObjectType::SharedPtr& pObject, const glm::vec3& translation, const glm::vec3& target, const glm::vec3& up, const glm::vec3& scale, const std::string& name = "")
+        static SharedPtr create(const typename ObjectType::SharedPtr& pObject, const glm::vec3& translation, const glm::vec3& target, const glm::vec3& up, const glm::vec3& scale, bool setBaseTransform = true, const std::string& name = "")
         {
-            return create(pObject, calculateTransformMatrix(translation, target, up, scale));
+            if (setBaseTransform)
+            {
+                return create(pObject, calculateTransformMatrix(translation, target, up, scale), name);
+            }
+            else
+            {
+                SharedPtr pInstance = create(pObject, glm::mat4(), name);
+                pInstance->setTranslation(translation, false);
+                pInstance->mTarget = target;
+                pInstance->mUp = up;
+                pInstance->setScaling(scale);
+                return pInstance;
+            }
         }
 
         /** Constructs a object instance with a transform
@@ -77,12 +92,24 @@ namespace Falcor
             \param[in] translation Base translation of the instance
             \param[in] rotation Euler angle rotations of the instance
             \param[in] scale Base scale of the instance
+            \param[in] setBaseTransform If true, initializes base transform with transformation arguments. Otherwise base transform is identity, and arguments are applied to the instance.
             \param[in] name Name of the instance
             \return A new instance of the object
         */
-        static SharedPtr create(const typename ObjectType::SharedPtr& pObject, const glm::vec3& translation, const glm::vec3& rotation, const glm::vec3& scale, const std::string& name = "")
+        static SharedPtr create(const typename ObjectType::SharedPtr& pObject, const glm::vec3& translation, const glm::vec3& rotation, const glm::vec3& scale, bool setBaseTransform = true, const std::string& name = "")
         {
-            return create(pObject, calculateTransformMatrix(translation, rotation, scale));
+            if (setBaseTransform)
+            {
+                return create(pObject, calculateTransformMatrix(translation, rotation, scale), name);
+            }
+            else
+            {
+                SharedPtr pInstance = create(pObject, glm::mat4(), name);
+                pInstance->setTranslation(translation, false);
+                pInstance->setRotation(rotation);
+                pInstance->setScaling(scale);
+                return pInstance;
+            }
         }
 
         /** Gets object for which this is an instance of
@@ -112,8 +139,19 @@ namespace Falcor
 
         /** Sets position/translation of the instance
             \param[in] translation Instance translation
+            \param[in] updateLookAt If true, translates the look-at target as well to maintain rotation
         */
-        void setTranslation(const glm::vec3& translation) { mTranslation = translation; mFinalTransformDirty = true; };
+        void setTranslation(const glm::vec3& translation, bool updateLookAt)
+        {
+            if (updateLookAt)
+            {
+                glm::vec3 toLookAt = mTarget - mTranslation;
+                mTarget = translation + toLookAt;
+            }
+
+            mTranslation = translation;
+            mFinalTransformDirty = true;
+        };
 
         /** Gets the position/translation of the instance
             \return Translation of the instance
@@ -136,11 +174,14 @@ namespace Falcor
         void setRotation(const glm::vec3& rotation)
         {
             // Construct matrix from Euler angles and take upper 3x3
-            const glm::mat3 rotMtx(glm::yawPitchRoll(rotation[0], rotation[1], rotation[2]));
+            const glm::mat3 rotMtx(glm::yawPitchRoll(rotation[1], rotation[0], rotation[2]));
+
+            glm::vec3 up = rotMtx * glm::vec3(0, 1, 0);
+            glm::vec3 forward = rotMtx * glm::vec3(0, 0, -1);
 
             // Get look-at info
-            mUp = rotMtx[1];
-            mTarget = mTranslation + rotMtx[2]; // position + forward
+            mUp = up;
+            mTarget = mTranslation + forward; // position + forward
 
             mFinalTransformDirty = true;
         }
@@ -152,10 +193,10 @@ namespace Falcor
         {
             glm::vec3 result;
 
-            glm::mat4 rotationMtx = glm::lookAt(mTranslation, mTarget, mUp);
+            glm::mat4 rotationMtx = glm::lookAt(glm::vec3(), mTarget - mTranslation, mUp);
             glm::extractEulerAngleXYZ(rotationMtx, result[0], result[1], result[2]);
 
-            return result;
+            return -result;
         }
 
         /** Gets the up vector of the instance
@@ -190,10 +231,7 @@ namespace Falcor
         */
         virtual void move(const glm::vec3& position, const glm::vec3& target, const glm::vec3& up) override
         {
-            mTranslation = position;
-            mTarget = target;
-            mUp = up;
-
+            mAdditionalTransformMatrix = calculateTransformMatrix(position, target, up, glm::vec3(1.0f));
             mFinalTransformDirty = true;
         }
 
@@ -203,7 +241,7 @@ namespace Falcor
         {
             if (mFinalTransformDirty == true)
             {
-                mFinalTransformMatrix = mBaseTransformMatrix * calculateTransformMatrix(mTranslation, mTarget, mUp, mScale);
+                mFinalTransformMatrix = mAdditionalTransformMatrix * calculateTransformMatrix(mTranslation, mTarget, mUp, mScale) * mBaseTransformMatrix;
                 mBoundingBox = mpObject->getBoundingBox().transform(mFinalTransformMatrix);
 
                 mFinalTransformDirty = false;
@@ -213,7 +251,7 @@ namespace Falcor
         static glm::mat4 calculateTransformMatrix(const glm::vec3& translation, const glm::vec3& target, const glm::vec3& up, const glm::vec3& scale)
         {
             glm::mat4 translationMtx = glm::translate(glm::mat4(), translation);
-            glm::mat4 rotationMtx = glm::lookAt(translation, target, up);
+            glm::mat4 rotationMtx = glm::lookAt(glm::vec3(), target - translation, up);
             glm::mat4 scalingMtx = glm::scale(glm::mat4(), scale);
 
             return translationMtx * rotationMtx * scalingMtx;
@@ -222,7 +260,7 @@ namespace Falcor
         static glm::mat4 calculateTransformMatrix(const glm::vec3& translation, const glm::vec3& rotation, const glm::vec3& scale)
         {
             glm::mat4 translationMtx = glm::translate(glm::mat4(), translation);
-            glm::mat4 rotationMtx = glm::yawPitchRoll(rotation[0], rotation[1], rotation[2]);
+            glm::mat4 rotationMtx = glm::yawPitchRoll(rotation[1], rotation[0], rotation[2]);
             glm::mat4 scalingMtx = glm::scale(glm::mat4(), scale);
 
             return translationMtx * rotationMtx * scalingMtx;
@@ -244,12 +282,14 @@ namespace Falcor
         bool mVisible = true;
 
         typename ObjectType::SharedPtr mpObject;
-        glm::mat4 mBaseTransformMatrix; 
+        glm::mat4 mBaseTransformMatrix;
 
         glm::vec3 mTranslation;
         glm::vec3 mUp;
         glm::vec3 mTarget;
         glm::vec3 mScale;
+
+        glm::mat4 mAdditionalTransformMatrix;
 
         mutable glm::mat4 mFinalTransformMatrix;
         mutable BoundingBox mBoundingBox;

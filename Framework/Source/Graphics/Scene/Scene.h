@@ -106,7 +106,6 @@ namespace Falcor
         // Models
         uint32_t getModelCount() const { return (uint32_t)mModels.size(); }
         const Model::SharedPtr& getModel(uint32_t modelID) const { return mModels[modelID][0]->getObject(); };
-        const std::string& getModelFilename(uint32_t modelID) const { return getModel(modelID)->getName(); };
         void deleteModel(uint32_t modelID);
         void deleteAllModels();
 
