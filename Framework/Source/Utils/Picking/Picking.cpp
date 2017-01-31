@@ -47,12 +47,12 @@ namespace Falcor
         return mPickResult.pModelInstance != nullptr;
     }
 
-    ObjectInstance<Mesh>::SharedPtr Picking::getPickedMeshInstance() const
+    const ObjectInstance<Mesh>::SharedPtr& Picking::getPickedMeshInstance() const
     {
         return mPickResult.pMeshInstance;
     }
 
-    ObjectInstance<Model>::SharedPtr Picking::getPickedModelInstance() const
+    const ObjectInstance<Model>::SharedPtr& Picking::getPickedModelInstance() const
     {
         return mPickResult.pModelInstance;
     }

@@ -34,7 +34,7 @@
 #include "glm/gtc/matrix_transform.hpp"
 #include "glm/gtx/euler_angles.hpp"
 
-namespace Falcor 
+namespace Falcor
 {
     class SceneRenderer;
     class Model;
@@ -64,7 +64,7 @@ namespace Falcor
             \param[in] target Base look-at target of the instance
             \param[in] up Base up vector of the instance
             \param[in] scale Base scale of the instance
-            \param[in] setBaseTransform If true, initializes base transform with transformation arguments. Otherwise base transform is identity, and arguments are applied to the instance.
+            \param[in] setBaseTransform If true, initializes base transform with the transform arguments. Otherwise base transform is identity, and arguments are applied to the instance.
             \param[in] name Name of the instance
             \return A new instance of the object
         */
@@ -90,7 +90,7 @@ namespace Falcor
             \param[in] translation Base translation of the instance
             \param[in] rotation Euler angle rotations of the instance
             \param[in] scale Base scale of the instance
-            \param[in] setBaseTransform If true, initializes base transform with transformation arguments. Otherwise base transform is identity, and arguments are applied to the instance.
+            \param[in] setBaseTransform If true, initializes base transform with the transform arguments. Otherwise base transform is identity, and arguments are applied to the instance.
             \param[in] name Name of the instance
             \return A new instance of the object
         */

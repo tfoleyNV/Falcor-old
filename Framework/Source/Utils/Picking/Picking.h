@@ -38,18 +38,35 @@ namespace Falcor
         using UniquePtr = std::unique_ptr<Picking>;
         using UniqueConstPtr = std::unique_ptr<const Picking>;
 
+        /** Creates an instance of the scene picker.
+            \param[in] pScene Scene to pick.
+            \param[in] fboWidth Size of internal FBO used for picking.
+            \param[in] fboHeight Size of internal FBO used for picking.
+            \return New Picking instance for pScene.
+        */
         static UniquePtr create(const Scene::SharedPtr& pScene, uint32_t fboWidth, uint32_t fboHeight);
 
-        /** Performs a picking operation on the scene
+        /** Performs a picking operation on the scene and stores the result.
             \param[in] mousePos Mouse position in the range [0,1] with (0,0) being the top left corner. Same coordinate space as in MouseEvent.
-            \param[in] pContext Render context to render scene with
+            \param[in] pContext Render context to render scene with.
             \return Whether an object was picked or not.
         */
         bool pick(RenderContext* pContext, const glm::vec2& mousePos, Camera* pCamera);
 
-        Model::MeshInstance::SharedPtr getPickedMeshInstance() const;
-        Scene::ModelInstance::SharedPtr getPickedModelInstance() const;
+        /** Gets the picked mesh instance.
+            \return Pointer to the picked mesh instance, otherwise nullptr if nothing was picked.
+        */
+        const Model::MeshInstance::SharedPtr& getPickedMeshInstance() const;
 
+        /** Gets the picked model instance.
+            \return Pointer to the picked model instance, otherwise nullptr if nothing was picked.
+        */
+        const Scene::ModelInstance::SharedPtr& getPickedModelInstance() const;
+
+        /** Resize the internal FBO used for picking.
+            \param[in] width Width of the FBO.
+            \param[in] height Height of the FBO.
+        */
         void resizeFBO(uint32_t width, uint32_t height);
 
     private:
