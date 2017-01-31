@@ -68,14 +68,16 @@ namespace Falcor
             \param[in] name Name of the instance
             \return A new instance of the object
         */
-        static SharedPtr create(const typename ObjectType::SharedPtr& pObject, const glm::vec3& translation, const glm::vec3& target, const glm::vec3& up, const glm::vec3& scale, bool setBaseTransform = true, const std::string& name = "")
+        static SharedPtr create(const typename ObjectType::SharedPtr& pObject, const glm::vec3& translation, const glm::vec3& target, const glm::vec3& up, const glm::vec3& scale, const std::string& name = "")
         {
             if (setBaseTransform)
             {
+                mBase
                 return create(pObject, calculateTransformMatrix(translation, target, up, scale), name);
             }
             else
             {
+                // #CR Apply in scene importer
                 SharedPtr pInstance = create(pObject, glm::mat4(), name);
                 pInstance->setTranslation(translation, false);
                 pInstance->mTarget = target;
@@ -280,14 +282,17 @@ namespace Falcor
         bool mVisible = true;
 
         typename ObjectType::SharedPtr mpObject;
-        glm::mat4 mBaseTransformMatrix;
 
-        glm::vec3 mTranslation;
-        glm::vec3 mUp;
-        glm::vec3 mTarget;
-        glm::vec3 mScale;
 
-        glm::mat4 mAdditionalTransformMatrix;
+        // #CR mesh loads to matrix, scene loads model instances to components, then calculates matrix
+        struct 
+        {
+            glm::vec3 mTranslation;
+            glm::vec3 up;
+            glm::vec3 target;
+            glm::vec3 scale;
+            glm::mat4 matrix;
+        } mBase, mMovable;
 
         mutable glm::mat4 mFinalTransformMatrix;
         mutable BoundingBox mBoundingBox;

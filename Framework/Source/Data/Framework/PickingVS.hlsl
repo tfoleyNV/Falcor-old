@@ -27,24 +27,7 @@
 ***************************************************************************/
 #include "ShaderCommon.h"
 
-struct VS_IN
-{
-    float4 pos         : POSITION;
-    float3 normal      : NORMAL;
-    float3 tangent     : TANGENT;
-    float3 bitangent   : BITANGENT;
-#ifdef HAS_TEXCRD
-    float2 texC        : TEXCOORD;
-#endif
-#ifdef HAS_COLORS
-    float3 color       : DIFFUSE_COLOR;
-#endif
-#ifdef _VERTEX_BLENDING
-    float4 boneWeights : BONE_WEIGHTS;
-    uint4  boneIds     : BONE_IDS;
-#endif
-    uint instanceID : SV_INSTANCEID;
-};
+// reuse default vs define
 
 struct VS_OUT
 {

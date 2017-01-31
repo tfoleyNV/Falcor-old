@@ -80,7 +80,6 @@ struct VS_OUT
     float3 posW       : POSW;
     float3 colorV     : COLOR;
     float4 posH       : SV_POSITION;
-    uint   instanceID : INSTANCEID;
 };
 
 #ifdef _SINGLE_PASS_STEREO

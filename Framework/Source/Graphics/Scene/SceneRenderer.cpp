@@ -276,7 +276,7 @@ namespace Falcor
         currentData.pCamera = pCamera;
         currentData.pMaterial = nullptr;
         currentData.pModel = nullptr;
-        currentData.drawID = 1;
+        currentData.drawID = 1; // #CR Zero based
         setupVR();
         setPerFrameData(pContext, currentData);
 
