@@ -1520,6 +1520,7 @@
     <ClInclude Include="Graphics\Model\Loaders\ModelImporter.h">
       <Filter>Graphics\Model\Loaders</Filter>
     </ClInclude>
+    <ClInclude Include="Utils\Picking\Picking.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Externals">
@@ -2052,6 +2053,15 @@
     </FxCompile>
     <FxCompile Include="..\..\Media\Picking.ps.hlsl">
       <Filter>Utils\Picking</Filter>
+    </FxCompile>
+    <FxCompile Include="Data\Framework\PickingVS.hlsl">
+      <Filter>Data\Framework</Filter>
+    </FxCompile>
+    <FxCompile Include="Data\Framework\PickingPS.hlsl">
+      <Filter>Data\Framework</Filter>
+    </FxCompile>
+    <FxCompile Include="Data\Framework\ConstColorPS.hlsl">
+      <Filter>Data\Framework</Filter>
     </FxCompile>
   </ItemGroup>
 </Project>

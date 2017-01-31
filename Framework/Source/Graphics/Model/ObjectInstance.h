@@ -33,8 +33,6 @@
 #include "glm/mat4x4.hpp"
 #include "glm/gtc/matrix_transform.hpp"
 #include "glm/gtx/euler_angles.hpp"
-#include "glm/common.hpp"
-#include "glm/gtx/common.hpp"
 
 namespace Falcor 
 {

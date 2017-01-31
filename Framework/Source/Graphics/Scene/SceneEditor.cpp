@@ -329,6 +329,7 @@ namespace Falcor
 
         mpRenderContext = gpDevice->getRenderContext();
 
+        // Picking
         auto backBufferFBO = gpDevice->getSwapChainFbo();
         mpPicking = Picking::create(mpScene, backBufferFBO->getWidth(), backBufferFBO->getHeight());
 
@@ -336,8 +337,7 @@ namespace Falcor
         mpSelectionSceneRenderer = SceneRenderer::create(mpSelectionScene);
 
         // Create graphics state for drawing wireframe
-        mpWireframeProgram = GraphicsProgram::createFromFile("", "Wireframe.ps.hlsl");
-
+        mpWireframeProgram = GraphicsProgram::createFromFile("", "Framework//ConstColorPS.hlsl");
         mpGraphicsState = GraphicsState::create();
         mpGraphicsState->setProgram(mpWireframeProgram);
         mpGraphicsState->setRasterizerState(mpBiasWireframeRS);

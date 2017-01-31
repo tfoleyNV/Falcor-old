@@ -26,10 +26,50 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ***************************************************************************/
 #include "ShaderCommon.h"
-#define _COMPILE_DEFAULT_VS
-#include "VertexAttrib.h"
 
-uint main(VS_OUT vOut) : SV_TARGET
+struct VS_IN
 {
-    return gDrawId[vOut.instanceID];
+    float4 pos         : POSITION;
+    float3 normal      : NORMAL;
+    float3 tangent     : TANGENT;
+    float3 bitangent   : BITANGENT;
+#ifdef HAS_TEXCRD
+    float2 texC        : TEXCOORD;
+#endif
+#ifdef HAS_COLORS
+    float3 color       : DIFFUSE_COLOR;
+#endif
+#ifdef _VERTEX_BLENDING
+    float4 boneWeights : BONE_WEIGHTS;
+    uint4  boneIds     : BONE_IDS;
+#endif
+    uint instanceID : SV_INSTANCEID;
+};
+
+struct VS_OUT
+{
+    float4 posH : SV_POSITION;
+    uint drawID : DRAW_ID;
+};
+
+float4x4 getWorldMat(VS_IN vIn)
+{
+#ifdef _VERTEX_BLENDING
+    float4x4 worldMat = blendVertices(vIn.boneWeights, vIn.boneIds);
+#else
+    float4x4 worldMat = gWorldMat[vIn.instanceID];
+#endif
+    return worldMat;
+}
+
+VS_OUT main(VS_IN vIn)
+{
+    VS_OUT vOut;
+    float4x4 worldMat = getWorldMat(vIn);
+    float4 posW = mul(worldMat, vIn.pos);
+    vOut.posH = mul(gCam.viewProjMat, posW);
+
+    vOut.drawID = gDrawId[vIn.instanceID];
+
+    return vOut;
 }

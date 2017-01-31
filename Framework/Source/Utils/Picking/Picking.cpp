@@ -75,7 +75,7 @@ namespace Falcor
         mpGraphicsState->setFbo(mpFBO);
 
         // Compile shaders
-        mpProgram = GraphicsProgram::createFromFile("", "Picking.ps.hlsl");
+        mpProgram = GraphicsProgram::createFromFile("Framework//PickingVS.hlsl", "Framework//PickingPS.hlsl");
         mpGraphicsState->setProgram(mpProgram);
 
         mpProgramVars = GraphicsVars::create(mpProgram->getActiveVersion()->getReflector());
