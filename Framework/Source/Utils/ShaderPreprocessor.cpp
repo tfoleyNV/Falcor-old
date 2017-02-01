@@ -1077,7 +1077,9 @@ namespace Falcor
 
 #if defined(FALCOR_GL)
         spSetCodeGenTarget(spireContext, SPIRE_GLSL);
-#elif defined(FALCOR_DX11)
+#elif defined(FALCOR_D3D11)
+        spSetCodeGenTarget(spireContext, SPIRE_HLSL);
+#elif defined(FALCOR_D3D12)
         spSetCodeGenTarget(spireContext, SPIRE_HLSL);
 #else
 #error unknown shader compilation target
