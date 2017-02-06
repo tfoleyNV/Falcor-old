@@ -1071,6 +1071,12 @@ namespace Falcor
         }
 
         spAddPreprocessorDefine(spireContext, "__SPIRE__", "1");
+
+        for(auto shaderDefine : shaderDefines)
+        {
+            spAddPreprocessorDefine(spireContext, shaderDefine.first.c_str(), shaderDefine.second.c_str());
+        }
+
         spAddPreprocessorDefine(spireContext, "FALCOR_HLSL", "1");
 
         SpireDiagnosticSink* spireSink = spCreateDiagnosticSink(spireContext);
