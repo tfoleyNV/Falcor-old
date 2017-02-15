@@ -34,7 +34,9 @@ namespace Falcor
     struct ShaderData
     {
         ID3DBlobPtr pBlob;
+#ifdef SPIRE_REMOVED
         ShaderReflectionHandle pReflector;
+#endif
     };
 
     static const char* kEntryPoint = "main";
@@ -139,17 +141,21 @@ namespace Falcor
 #elif defined FALCOR_D3D12
         pShader->mApiHandle = { pData->pBlob->GetBufferPointer(), pData->pBlob->GetBufferSize() };
 #endif
+#ifdef SPIRE_REMOVED
         // Get the reflection object
         d3d_call(D3DReflect(pData->pBlob->GetBufferPointer(), pData->pBlob->GetBufferSize(), IID_PPV_ARGS(&pData->pReflector)));
+#endif
 
         return pShader;
     }
 
+#ifdef SPIRE_REMOVED
     ShaderReflectionHandle Shader::getReflectionInterface() const
     {
         ShaderData* pData = (ShaderData*)mpPrivateData;
         return pData->pReflector;
     }
+#endif
 
     ID3DBlobPtr Shader::getCodeBlob() const
     {
