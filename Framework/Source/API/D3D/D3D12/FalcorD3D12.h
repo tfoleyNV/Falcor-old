@@ -29,6 +29,8 @@
 #define NOMINMAX
 #include <d3d12.h>
 
+#include "Externals/Spire/Spire.h"
+
 namespace Falcor
 {
     /*!
@@ -75,7 +77,11 @@ namespace Falcor
     using PsoHandle = ID3D12PipelineStatePtr;
     using ComputeStateHandle = ID3D12PipelineStatePtr;
     using ShaderHandle = D3D12_SHADER_BYTECODE;
+#ifdef SPIRE_REMOVED
     using ShaderReflectionHandle = ID3D12ShaderReflectionPtr;
+#else
+    using ShaderReflectionHandle = spire::ShaderReflection*;
+#endif
     using RootSignatureHandle = ID3D12RootSignaturePtr;
     using DescriptorHeapHandle = ID3D12DescriptorHeapPtr;
 

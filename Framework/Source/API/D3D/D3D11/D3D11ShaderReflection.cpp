@@ -306,6 +306,7 @@ namespace Falcor
 #endif
         }
 
+#ifdef SPIRE_REMOVED
         static ShaderResourceDesc::ResourceType getResourceType(D3D_SHADER_INPUT_TYPE type)
         {
             switch(type)
@@ -369,6 +370,7 @@ namespace Falcor
                 return ShaderResourceDesc::Dimensions::Unknown;
             }
         }
+#endif
 
         void reflectResources(ID3D11ShaderReflectionPtr pReflector, ShaderResourceDescMap& resourceMap)
         {

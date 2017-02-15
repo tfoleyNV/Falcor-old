@@ -39,6 +39,7 @@ namespace Falcor
 
     static const char* kEntryPoint = "main";
 
+#ifdef SPIRE_REMOVED
     static ID3DBlob* compileShader(const std::string& source, const std::string& target, std::string& errorLog)
     {
         ID3DBlob* pCode;
@@ -58,6 +59,111 @@ namespace Falcor
 
         return pCode;
     }
+
+#else
+    struct SpireBlob : ID3DBlob
+    {
+        void* buffer;
+        size_t bufferSize;
+        size_t refCount;
+
+        SpireBlob(void* buffer, size_t bufferSize)
+            : buffer(buffer)
+            , bufferSize(bufferSize)
+            , refCount(1)
+        {}
+
+        // IUnknown
+
+        virtual HRESULT STDMETHODCALLTYPE QueryInterface( 
+            /* [in] */ REFIID riid,
+            /* [iid_is][out] */ _COM_Outptr_ void __RPC_FAR *__RPC_FAR *ppvObject) override
+        {
+            *ppvObject = this;
+            return S_OK;
+        }
+
+        virtual ULONG STDMETHODCALLTYPE AddRef( void) override
+        {
+            ++refCount;
+            return (ULONG) refCount;
+        }
+
+        virtual ULONG STDMETHODCALLTYPE Release( void) override
+        {
+            --refCount;
+            if(refCount == 0)
+            {
+                delete this;
+            }
+            return (ULONG) refCount;
+        }
+
+        // ID3DBlob
+
+        virtual LPVOID STDMETHODCALLTYPE GetBufferPointer() override
+        {
+            return buffer;
+        }
+
+        virtual SIZE_T STDMETHODCALLTYPE GetBufferSize() override
+        {
+            return bufferSize;
+        }
+    };
+
+    static ShaderData compileShader(const std::string& source, const std::string& target, std::string& errorLog)
+    {
+        ShaderData shaderData = { 0, 0 };
+
+        // TODO(tfoley): need a way to pass along flags to the `D3DCompile` API here...
+
+        SpireCompilationContext* spireContext = spCreateCompilationContext(NULL);
+        SpireDiagnosticSink* spireSink = spCreateDiagnosticSink(spireContext);
+
+        spSetCodeGenTarget(spireContext, SPIRE_DXBC);
+
+        SpireCompilationResult* result = spCompileShaderFromSource(spireContext, source.c_str(), "falcor", spireSink);
+
+        int diagnosticsSize = spGetDiagnosticOutput(spireSink, NULL, 0);
+        if (diagnosticsSize != 0)
+        {
+            char* diagnostics = (char*)malloc(diagnosticsSize);
+            spGetDiagnosticOutput(spireSink, diagnostics, diagnosticsSize);
+            errorLog += diagnostics;
+            free(diagnostics);
+        }
+        if(spDiagnosticSinkHasAnyErrors(spireSink) != 0)
+        {
+            spDestroyDiagnosticSink(spireSink);
+            spDestroyCompilationContext(spireContext);
+            return shaderData;
+        }
+
+        int bufferSize = 0;
+        void* buffer = (void*) spGetShaderStageSource(result, NULL, NULL, &bufferSize);
+
+        shaderData.pBlob = new SpireBlob(buffer, bufferSize);
+
+        // Extract the reflection data from Spire too.
+        auto reflectionBlob = (spire::ShaderReflection*) spGetReflection(result);
+        assert(reflectionBlob);
+
+        // Note: the reflection data that we query from Spire only survives as long as
+        // the `SpireCompilationResult` that owns it, so we have to make our own copy.
+        auto reflectionBlobSize = reflectionBlob->getReflectionDataSize();
+        spire::ShaderReflection* reflectionBlobCopy = (spire::ShaderReflection*) malloc(reflectionBlobSize);
+        memcpy(reflectionBlobCopy, reflectionBlob, reflectionBlobSize);
+        shaderData.pReflector = reflectionBlobCopy;
+
+        spDestroyCompilationResult(result);
+        spDestroyDiagnosticSink(spireSink);
+        spDestroyCompilationContext(spireContext);
+
+        return shaderData;
+    }
+#endif
+
 
     Shader::Shader(ShaderType type) : mType(type)
     {
@@ -98,7 +204,11 @@ namespace Falcor
 
         // Compile the shader
         ShaderData* pData = (ShaderData*)pShader->mpPrivateData;
+#ifdef SPIRE_REMOVED
         pData->pBlob = compileShader(shaderString, getTargetString(type), log);
+#else
+        *pData = compileShader(shaderString, getTargetString(type), log);
+#endif
 
         if (pData->pBlob == nullptr)
         {
@@ -139,8 +249,10 @@ namespace Falcor
 #elif defined FALCOR_D3D12
         pShader->mApiHandle = { pData->pBlob->GetBufferPointer(), pData->pBlob->GetBufferSize() };
 #endif
+#ifdef SPIRE_REMOVED
         // Get the reflection object
         d3d_call(D3DReflect(pData->pBlob->GetBufferPointer(), pData->pBlob->GetBufferSize(), IID_PPV_ARGS(&pData->pReflector)));
+#endif
 
         return pShader;
     }
