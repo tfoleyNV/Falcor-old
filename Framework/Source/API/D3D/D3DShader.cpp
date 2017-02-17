@@ -145,8 +145,16 @@ namespace Falcor
 
         shaderData.pBlob = new SpireBlob(buffer, bufferSize);
 
-        // TODO: get the reflection part too!
-        // shaderData.pReflection = spGetReflection(result);
+        // Extract the reflection data from Spire too.
+        auto reflectionBlob = (spire::ShaderReflection*) spGetReflection(result);
+        assert(reflectionBlob);
+
+        // Note: the reflection data that we query from Spire only survives as long as
+        // the `SpireCompilationResult` that owns it, so we have to make our own copy.
+        auto reflectionBlobSize = reflectionBlob->getReflectionDataSize();
+        spire::ShaderReflection* reflectionBlobCopy = (spire::ShaderReflection*) malloc(reflectionBlobSize);
+        memcpy(reflectionBlobCopy, reflectionBlob, reflectionBlobSize);
+        shaderData.pReflector = reflectionBlobCopy;
 
         spDestroyCompilationResult(result);
         spDestroyDiagnosticSink(spireSink);

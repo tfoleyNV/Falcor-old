@@ -662,11 +662,8 @@ namespace Falcor
         bufferDesc.descMap[bindLocation]->setShaderMask(mask);
 
         return true;
-
-
-        return true;
-#endif
     }
+#endif
 
     bool ProgramReflection::reflectVertexAttributes(const ProgramVersion* pProgVer, std::string& log)
     {
@@ -717,6 +714,7 @@ namespace Falcor
         return match;
     }
 
+#ifdef SPIRE_REMOVED
     static ProgramReflection::Resource::Dimensions getResourceDimensions(D3D_SRV_DIMENSION dims)
     {
         switch (dims)
@@ -843,6 +841,139 @@ namespace Falcor
 
         return true;
     }
+#else
+    static ProgramReflection::Resource::Dimensions getResourceDimensions(SpireTextureShape shape)
+    {
+        switch (shape)
+        {
+        case SPIRE_TEXTURE_BUFFER:
+            return ProgramReflection::Resource::Dimensions::Buffer; 
+        case SPIRE_TEXTURE_1D:
+            return ProgramReflection::Resource::Dimensions::Texture1D;
+        case SPIRE_TEXTURE_1D_ARRAY:
+            return ProgramReflection::Resource::Dimensions::Texture1DArray;
+        case SPIRE_TEXTURE_2D:
+            return ProgramReflection::Resource::Dimensions::Texture2D;
+        case SPIRE_TEXTURE_2D_ARRAY:
+            return ProgramReflection::Resource::Dimensions::Texture2DArray;
+        case SPIRE_TEXTURE_2D_MULTISAMPLE:
+            return ProgramReflection::Resource::Dimensions::Texture2DMS;
+        case SPIRE_TEXTURE_2D_MULTISAMPLE_ARRAY:
+            return ProgramReflection::Resource::Dimensions::Texture2DMSArray;
+        case SPIRE_TEXTURE_3D:
+            return ProgramReflection::Resource::Dimensions::Texture3D;
+        case SPIRE_TEXTURE_CUBE:
+            return ProgramReflection::Resource::Dimensions::TextureCube;
+        case SPIRE_TEXTURE_CUBE_ARRAY:
+            return ProgramReflection::Resource::Dimensions::TextureCubeArray;
+        default:
+            should_not_get_here();
+            return ProgramReflection::Resource::Dimensions::Unknown;
+        }
+    }
+
+    static ProgramReflection::Resource::ResourceType getResourceType(spire::ParameterReflection* pParameter)
+    {
+        switch (pParameter->getCategory())
+        {
+        case spire::ParameterCategory::SamplerState:
+            return ProgramReflection::Resource::ResourceType::Sampler;
+        case spire::ParameterCategory::ShaderResource:
+        case spire::ParameterCategory::UnorderedAccess:
+            switch(pParameter->getType()->getTextureShape() & SPIRE_TEXTURE_BASE_SHAPE_MASK)
+            {
+            case SPIRE_TEXTURE_BYTE_ADDRESS_BUFFER:
+                return ProgramReflection::Resource::ResourceType::RawBuffer;
+
+            default:
+                return ProgramReflection::Resource::ResourceType::Texture;
+
+            case SPIRE_TEXTURE_NONE:
+                break;
+            }
+            break;
+        default:
+            break;
+        }
+        should_not_get_here();
+        return ProgramReflection::Resource::ResourceType::Unknown;
+    }
+
+    static ProgramReflection::ShaderAccess getShaderAccess(spire::ParameterCategory category)
+    {
+        switch (category)
+        {
+        case spire::ParameterCategory::ShaderResource:
+        case spire::ParameterCategory::SamplerState:
+            return ProgramReflection::ShaderAccess::Read;
+        case spire::ParameterCategory::UnorderedAccess:
+            return ProgramReflection::ShaderAccess::ReadWrite;
+        default:
+            should_not_get_here();
+            return ProgramReflection::ShaderAccess::Undefined;
+        }
+    }
+
+    static ProgramReflection::Resource::ReturnType getReturnType(spire::TypeReflection* pType)
+    {
+        switch (pType->getScalarType())
+        {
+        case spire::TypeReflection::ScalarType::Float32:
+            return ProgramReflection::Resource::ReturnType::Float;
+        case spire::TypeReflection::ScalarType::Int32:
+            return ProgramReflection::Resource::ReturnType::Int;
+        case spire::TypeReflection::ScalarType::UInt32:
+            return ProgramReflection::Resource::ReturnType::Uint;
+        case spire::TypeReflection::ScalarType::Float64:
+            return ProgramReflection::Resource::ReturnType::Double;
+        default:
+            should_not_get_here();
+            return ProgramReflection::Resource::ReturnType::Unknown;
+        }
+    }
+
+
+
+    bool reflectResource(spire::ParameterReflection* pParameter, ProgramReflection::ResourceMap& resourceMap, uint32_t shaderIndex, std::string& log)
+    {
+        ProgramReflection::Resource falcorDesc;
+        std::string name(pParameter->getName());
+
+        falcorDesc.type = getResourceType(pParameter);
+        falcorDesc.shaderAccess = getShaderAccess(pParameter->getCategory());
+        if (falcorDesc.type == ProgramReflection::Resource::ResourceType::Texture)
+        {
+            falcorDesc.retType = getReturnType(pParameter->getType()->getTextureResultType());
+            falcorDesc.dims = getResourceDimensions(pParameter->getType()->getTextureShape());
+        }
+        bool isArray = pParameter->getType()->isArray();
+        falcorDesc.regIndex = pParameter->getBindingIndex();
+        falcorDesc.registerSpace = pParameter->getBindingSpace();
+        assert(falcorDesc.registerSpace == 0);
+        falcorDesc.arraySize = isArray ? (uint32_t)pParameter->getType()->getTotalArrayElementCount() : 0;
+
+        // If this already exists, definitions should match
+        const auto& prevDef = resourceMap.find(name);
+        if (prevDef == resourceMap.end())
+        {
+            resourceMap[name] = falcorDesc;
+        }
+        else
+        {
+            std::string varLog;
+            if (verifyResourceDefinition(prevDef->second, falcorDesc, varLog) == false)
+            {
+                log += "Shader resource '" + std::string(name) + "' has different definitions between different shader stages. " + varLog;
+                return false;
+            }
+        }
+
+        // Update the mask
+        resourceMap[name].shaderMask |= (1 << shaderIndex);
+
+        return true;
+    }
+#endif
 
     bool ProgramReflection::reflectResources(const ProgramVersion* pProgVer, std::string& log)
     {
@@ -887,7 +1018,8 @@ namespace Falcor
                         break;
 
                     default:
-                        throw "unimplemented";
+                        res = reflectResource(param, mResources, shader, log);
+                        break;
                     }
 
                     // TODO(tfoley): actually do stuff here!!!
