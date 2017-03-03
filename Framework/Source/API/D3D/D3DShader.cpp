@@ -39,28 +39,7 @@ namespace Falcor
 
     static const char* kEntryPoint = "main";
 
-#ifdef SPIRE_REMOVED
-    static ID3DBlob* compileShader(const std::string& source, const std::string& target, std::string& errorLog)
-    {
-        ID3DBlob* pCode;
-        ID3DBlobPtr pErrors;
-
-        UINT flags = D3DCOMPILE_WARNINGS_ARE_ERRORS;
-#ifdef _DEBUG
-        flags |= D3DCOMPILE_DEBUG;
-#endif
-
-        HRESULT hr = D3DCompile(source.c_str(), source.size(), nullptr, nullptr, nullptr, kEntryPoint, target.c_str(), flags, 0, &pCode, &pErrors);
-        if(FAILED(hr))
-        {
-            convertBlobToString(pErrors, errorLog);
-            return nullptr;
-        }
-
-        return pCode;
-    }
-
-#else
+#if FALCOR_USE_SPIRE_AS_COMPILER
     struct SpireBlob : ID3DBlob
     {
         void* buffer;
@@ -162,6 +141,26 @@ namespace Falcor
 
         return shaderData;
     }
+#else
+    static ID3DBlob* compileShader(const std::string& source, const std::string& target, std::string& errorLog)
+    {
+        ID3DBlob* pCode;
+        ID3DBlobPtr pErrors;
+
+        UINT flags = D3DCOMPILE_WARNINGS_ARE_ERRORS;
+#ifdef _DEBUG
+        flags |= D3DCOMPILE_DEBUG;
+#endif
+
+        HRESULT hr = D3DCompile(source.c_str(), source.size(), nullptr, nullptr, nullptr, kEntryPoint, target.c_str(), flags, 0, &pCode, &pErrors);
+        if(FAILED(hr))
+        {
+            convertBlobToString(pErrors, errorLog);
+            return nullptr;
+        }
+
+        return pCode;
+    }
 #endif
 
 
@@ -204,10 +203,10 @@ namespace Falcor
 
         // Compile the shader
         ShaderData* pData = (ShaderData*)pShader->mpPrivateData;
-#ifdef SPIRE_REMOVED
-        pData->pBlob = compileShader(shaderString, getTargetString(type), log);
-#else
+#if FALCOR_USE_SPIRE_AS_COMPILER
         *pData = compileShader(shaderString, getTargetString(type), log);
+#else
+        pData->pBlob = compileShader(shaderString, getTargetString(type), log);
 #endif
 
         if (pData->pBlob == nullptr)
@@ -249,7 +248,10 @@ namespace Falcor
 #elif defined FALCOR_D3D12
         pShader->mApiHandle = { pData->pBlob->GetBufferPointer(), pData->pBlob->GetBufferSize() };
 #endif
-#ifdef SPIRE_REMOVED
+
+#if FALCOR_USE_SPIRE_AS_COMPILER
+        // Note: when using Spire, reflection data was extracted earlier in `compileShader()`
+#else
         // Get the reflection object
         d3d_call(D3DReflect(pData->pBlob->GetBufferPointer(), pData->pBlob->GetBufferSize(), IID_PPV_ARGS(&pData->pReflector)));
 #endif
