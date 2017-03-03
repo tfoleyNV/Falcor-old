@@ -26,4 +26,8 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ***************************************************************************/
 
+#include "FalcorConfig.h"
+
+#if FALCOR_BUILD_SPIRE
 #include "Externals/Spire/SpireAllSource.h"
+#endif

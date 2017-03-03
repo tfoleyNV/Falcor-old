@@ -33,13 +33,12 @@
 #include <cctype>
 #include <set>
 
-#if defined(USE_SPIRE_AS_PREPROCESSOR)
+#if FALCOR_USE_SPIRE_AS_PREPROCESSOR
 #include "Externals/Spire/Spire.h"
 #endif
 
 namespace Falcor
 {
-#if !defined(USE_SPIRE_AS_PREPROCESSOR)
     size_t npos = std::string::npos;
 
     bool isInComment(const std::string& str, size_t offset)
@@ -258,31 +257,6 @@ namespace Falcor
         return getLinePragma(line, filename);
     }
 
-    static bool endsWith(const std::string& str, const char* suffix)
-    {
-        size_t strLen = str.length();
-        size_t suffixLen = strlen(suffix);
-        if (strLen < suffixLen) return false;
-        return strcmp(str.c_str() + (strLen - suffixLen), suffix) == 0;
-    }
-#endif
-
-    static bool checkSpireErrors(
-        SpireDiagnosticSink* spireSink,
-        std::string& outDiagnostics)
-    {
-        int diagnosticsSize = spGetDiagnosticOutput(spireSink, NULL, 0);
-        if (diagnosticsSize != 0)
-        {
-            char* diagnostics = (char*)malloc(diagnosticsSize);
-            spGetDiagnosticOutput(spireSink, diagnostics, diagnosticsSize);
-            outDiagnostics += diagnostics;
-            free(diagnostics);
-        }
-
-        return spDiagnosticSinkHasAnyErrors(spireSink) != 0;
-    }
-
     bool ShaderPreprocessor::addIncludes(std::string& code)
     {
         auto getDirAbs = [](const std::string& path) -> std::string 
@@ -333,11 +307,6 @@ namespace Falcor
             else
             {
                 // Path is relative to including file, and may include Falcor builtins.
-
-                // Search for Falcor builtin written in Spire
-                // Note: checking for this before an ordinary builtin ensures that stale
-                // files hanging out in the directory tree don't cause as many problems.
-                if(findFileInDataDirectories(includedPathRaw + ".spire", includedPathAbs)) goto SUCCESS;
 
                 // Search for Falcor builtin
                 if(findFileInDataDirectories(includedPathRaw, includedPathAbs)) goto SUCCESS;
@@ -998,9 +967,28 @@ namespace Falcor
         mDefineMap.clear();
     }
 
+#if FALCOR_USE_SPIRE_AS_PREPROCESSOR
+    static bool checkSpireErrors(
+        SpireDiagnosticSink* spireSink,
+        std::string& outDiagnostics)
+    {
+        int diagnosticsSize = spGetDiagnosticOutput(spireSink, NULL, 0);
+        if (diagnosticsSize != 0)
+        {
+            char* diagnostics = (char*)malloc(diagnosticsSize);
+            spGetDiagnosticOutput(spireSink, diagnostics, diagnosticsSize);
+            outDiagnostics += diagnostics;
+            free(diagnostics);
+        }
+
+        return spDiagnosticSinkHasAnyErrors(spireSink) != 0;
+    }
+#endif
+
+
     bool ShaderPreprocessor::parseShader(const std::string& filename, std::string& shader, std::string& errorMsg, const Program::DefineList& shaderDefines)
     {
-#if defined(USE_SPIRE_AS_PREPROCESSOR)
+#if FALCOR_USE_SPIRE_AS_PREPROCESSOR
         SpireCompilationContext* spireContext = spCreateCompilationContext(NULL);
 
         // TODO: Spire should really support a callback API for all file I/O,
