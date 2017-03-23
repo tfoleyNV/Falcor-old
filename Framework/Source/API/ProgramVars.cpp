@@ -461,6 +461,7 @@ namespace Falcor
 
     bool ProgramVars::setSampler(const std::string& name, const Sampler::SharedPtr& pSampler)
     {
+#if 0
         const ProgramReflection::Resource* pDesc = mpReflector->getResourceDesc(name);
         if (verifyResourceDesc(pDesc, ProgramReflection::Resource::ResourceType::Sampler, ProgramReflection::ShaderAccess::Read, name, "setSampler()") == false)
         {
@@ -468,6 +469,10 @@ namespace Falcor
         }
 
         return setSampler(pDesc->regIndex, pSampler);
+#else
+        mAssignedComponents[0]->setSampler(name, pSampler.get());
+        return true;
+#endif
     }
 
     Sampler::SharedPtr ProgramVars::getSampler(const std::string& name) const
@@ -519,6 +524,7 @@ namespace Falcor
 
     bool ProgramVars::setTexture(const std::string& name, const Texture::SharedPtr& pTexture)
     {
+#if 0
         const ProgramReflection::Resource* pDesc = mpReflector->getResourceDesc(name);
 
         if (verifyResourceDesc(pDesc, ProgramReflection::Resource::ResourceType::Texture, ProgramReflection::ShaderAccess::Undefined, name, "setTexture()") == false)
@@ -527,7 +533,10 @@ namespace Falcor
         }
 
         setResourceSrvUavCommon(pDesc, pTexture, mAssignedSrvs, mAssignedUavs);
-
+#else
+        // SPIRE
+        mAssignedComponents[0]->setTexture(name, pTexture.get());
+#endif
         return true;
     }
 

@@ -229,6 +229,11 @@ namespace Falcor
             setSampler(name, pSampler);
         }
 
+        size_t getVariableOffset(const std::string& name)
+        {
+            return mConstantBuffer->getVariableOffset(name);
+        }
+
         SpireModule* getSpireComponentClass() const { return mReflector->getSpireComponentClass(); }
 
     //private:
