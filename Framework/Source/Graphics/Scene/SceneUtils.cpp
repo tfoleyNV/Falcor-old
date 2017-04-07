@@ -54,8 +54,9 @@ namespace Falcor
         for(uint32_t i = 0; i < pScene->getLightCount(); i++)
         {
             auto pLight = pScene->getLight(i);
-            pLight->setIntoConstantBuffer(pBuffer, pLight->getName());
+            pLight->setIntoConstantBuffer(pBuffer, "gLights[" + std::to_string(i) + "]");
         }
+        pBuffer->setVariable("gLightCount", (int) pScene->getLightCount());
         pBuffer->setVariable("gAmbient", pScene->getAmbientIntensity());
     }
 }
