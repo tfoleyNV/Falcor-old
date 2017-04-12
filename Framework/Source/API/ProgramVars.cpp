@@ -622,6 +622,10 @@ namespace Falcor
         }
     }
 
+    uint32_t gRootSignatureSets = 0;
+    uint32_t gRootSignatureSwitches = 0;
+    void* gLastRootSignature = nullptr;
+
     template<bool forGraphics, typename ContextType>
     void ProgramVars::applyCommon(ContextType* pContext) const
     {
@@ -629,6 +633,13 @@ namespace Falcor
         ID3D12GraphicsCommandList* pList = pContext->getLowLevelData()->getCommandList();
         if(forGraphics)
         {
+            gRootSignatureSets++;
+            if(mpRootSignature.get() != gLastRootSignature)
+            {
+                gLastRootSignature = mpRootSignature.get();
+                gRootSignatureSwitches++;
+            }
+
             pList->SetGraphicsRootSignature(mpRootSignature->getApiHandle());
         }
         else
