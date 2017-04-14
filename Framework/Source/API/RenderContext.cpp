@@ -81,13 +81,16 @@ namespace Falcor
     {
         if (sBlitData.pVars == nullptr)
         {
-            sBlitData.pPass = FullScreenPass::create("Framework/Shaders/Blit.hlsl");
-            sBlitData.pVars = GraphicsVars::create(sBlitData.pPass->getProgram()->getActiveVersion()->getReflector());
+            sBlitData.pPass = FullScreenPass::create("Framework/Shaders/Blit.spire");
+            sBlitData.pVars = GraphicsVars::create(sBlitData.pPass->getProgram());
             sBlitData.pState = GraphicsState::create();
             Sampler::Desc desc;
             desc.setFilterMode(Sampler::Filter::Linear, Sampler::Filter::Linear, Sampler::Filter::Point).setAddressingMode(Sampler::AddressMode::Clamp, Sampler::AddressMode::Clamp, Sampler::AddressMode::Clamp);
             sBlitData.pVars->setSampler("gSampler", Sampler::create(desc));
-            assert(sBlitData.pPass->getProgram()->getActiveVersion()->getReflector()->getResourceDesc("gTex")->regIndex == 0);
+
+
+            //SPIRE: We haven't ported `getResourceDesc()` yet...
+//SPIRE:            assert(sBlitData.pPass->getProgram()->getReflector()->getResourceDesc("gTex")->regIndex == 0);
         }
     }
 

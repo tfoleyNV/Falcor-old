@@ -32,7 +32,7 @@
 
 namespace Falcor
 {
-    static const char* kShaderFilename = "Effects\\ToneMapping.ps.hlsl";
+    static const char* kShaderFilename = "Effects\\ToneMapping.spire";
     const Gui::DropdownList kOperatorList = { 
     { (uint32_t)ToneMapping::Operator::Clamp, "Clamp to LDR" },
     { (uint32_t)ToneMapping::Operator::Linear, "Linear" }, 
@@ -151,7 +151,7 @@ namespace Falcor
             should_not_get_here();
         }
 
-        ProgramReflection::SharedConstPtr pReflector = mpToneMapPass->getProgram()->getActiveVersion()->getReflector();
+        ProgramReflection::SharedConstPtr pReflector = mpToneMapPass->getProgram()->getReflector();
         mpToneMapVars = GraphicsVars::create(pReflector);
         mpToneMapCBuffer = mpToneMapVars["PerImageCB"];
     }
@@ -160,7 +160,7 @@ namespace Falcor
     {
         mpLuminancePass = FullScreenPass::create(kShaderFilename);
         mpLuminancePass->getProgram()->addDefine("_LUMINANCE");
-        mpLuminanceVars = GraphicsVars::create(mpLuminancePass->getProgram()->getActiveVersion()->getReflector());
+        mpLuminanceVars = GraphicsVars::create(mpLuminancePass->getProgram());
     }
 
     void ToneMapping::renderUI(Gui* pGui, const std::string& uiGroup)
