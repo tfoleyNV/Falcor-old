@@ -169,6 +169,7 @@ namespace Falcor
         void captureScreen();
         void toggleText(bool enabled);
         uint32_t getFrameID() const { return mFrameRate.getFrameCount(); }
+        Window::SharedPtr mpWindow;
     private:
         // Private functions
         void initUI();
@@ -180,7 +181,6 @@ namespace Falcor
         void captureVideoFrame();
         void renderGUI();
 
-        Window::SharedPtr mpWindow;
 
         bool mVsyncOn = false;
         bool mShowText = true;
