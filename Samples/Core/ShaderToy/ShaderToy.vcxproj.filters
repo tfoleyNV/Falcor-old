@@ -6,17 +6,17 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <None Include="Data\toy.fs">
-      <Filter>Data</Filter>
-    </None>
-    <None Include="Data\toyContainer.fs">
-      <Filter>Data</Filter>
-    </None>
-  </ItemGroup>
-  <ItemGroup>
     <ClCompile Include="ShaderToy.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ShaderToy.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Data\toy.glsl">
+      <Filter>Data</Filter>
+    </None>
+    <None Include="Data\toyContainer.slang">
+      <Filter>Data</Filter>
+    </None>
   </ItemGroup>
 </Project>

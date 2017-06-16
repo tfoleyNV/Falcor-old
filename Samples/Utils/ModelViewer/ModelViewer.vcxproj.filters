@@ -12,8 +12,8 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <FxCompile Include="Data\ModelViewer.ps.hlsl">
+    <None Include="Data\ModelViewer.ps.slang">
       <Filter>Data</Filter>
-    </FxCompile>
+    </None>
   </ItemGroup>
 </Project>

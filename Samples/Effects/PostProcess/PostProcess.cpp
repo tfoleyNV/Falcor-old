@@ -47,7 +47,7 @@ void PostProcess::onLoad()
     mCameraController.setModelParams(mpTeapot->getCenter(), mpTeapot->getRadius(), 2.0f);    
     
     //Program
-    mpMainProg = GraphicsProgram::createFromFile("PostProcess.vs.hlsl", "Postprocess.ps.hlsl");
+    mpMainProg = GraphicsProgram::createFromFile("PostProcess.vs.slang", "Postprocess.ps.slang");
     mpProgramVars = GraphicsVars::create(mpMainProg->getActiveVersion()->getReflector());
     mpGraphicsState = GraphicsState::create();
     mpGraphicsState->setFbo(mpDefaultFBO);

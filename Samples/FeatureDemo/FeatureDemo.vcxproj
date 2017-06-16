@@ -15,6 +15,7 @@
     <ClCompile Include="FeatureDemoControls.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Data\FeatureDemoCommon.slang.h" />
     <ClInclude Include="FeatureDemo.h" />
   </ItemGroup>
   <ItemGroup>
@@ -23,19 +24,9 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <None Include="Data\FeatureDemo.ps.hlsl">
-      <FileType>Document</FileType>
-    </None>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="Data\FeatureDemo.vs.hlsl">
-      <FileType>Document</FileType>
-    </None>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="Data\ApplyAO.ps.hlsl">
-      <FileType>Document</FileType>
-    </None>
+    <None Include="Data\ApplyAO.ps.slang" />
+    <None Include="Data\FeatureDemo.ps.slang" />
+    <None Include="Data\FeatureDemo.vs.slang" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{ADDD1F96-AE44-40BA-9942-0F056F96FA4B}</ProjectGuid>

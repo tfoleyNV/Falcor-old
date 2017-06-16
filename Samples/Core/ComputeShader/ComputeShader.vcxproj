@@ -22,10 +22,7 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <FxCompile Include="Data\compute.hlsl">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
-    </FxCompile>
+    <None Include="Data\compute.slang" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{283B18E4-08BC-4CDE-BDB6-B3B70FB7FC18}</ProjectGuid>

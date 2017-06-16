@@ -6,17 +6,17 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <None Include="Data\DeferredPass.fs">
-      <Filter>Data</Filter>
-    </None>
-    <None Include="Data\LightingPass.fs">
-      <Filter>Data</Filter>
-    </None>
-  </ItemGroup>
-  <ItemGroup>
     <ClCompile Include="SimpleDeferred.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="SimpleDeferred.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Data\DeferredPass.fs.slang">
+      <Filter>Data</Filter>
+    </None>
+    <None Include="Data\LightingPass.fs.slang">
+      <Filter>Data</Filter>
+    </None>
   </ItemGroup>
 </Project>

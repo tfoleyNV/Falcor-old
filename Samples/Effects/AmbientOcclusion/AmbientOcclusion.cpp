@@ -66,7 +66,7 @@ void AmbientOcclusion::onLoad()
     // "GBuffer" rendering
     //
 
-    mpPrePassProgram = GraphicsProgram::createFromFile("", "AOPrePass.ps.hlsl");
+    mpPrePassProgram = GraphicsProgram::createFromFile("", "AOPrePass.ps.slang");
     mpPrePassState = GraphicsState::create();
     mpPrePassVars = GraphicsVars::create(mpPrePassProgram->getActiveVersion()->getReflector());
 
@@ -92,7 +92,7 @@ void AmbientOcclusion::onLoad()
     linearDesc.setFilterMode(Sampler::Filter::Linear, Sampler::Filter::Linear, Sampler::Filter::Linear);
     mpLinearSampler = Sampler::create(linearDesc);
 
-    mpCopyPass = FullScreenPass::create("ApplyAO.ps.hlsl");
+    mpCopyPass = FullScreenPass::create("ApplyAO.ps.slang");
     mpCopyVars = GraphicsVars::create(mpCopyPass->getProgram()->getActiveVersion()->getReflector());
 
     // Effects

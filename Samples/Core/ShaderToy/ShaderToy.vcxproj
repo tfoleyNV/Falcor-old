@@ -22,8 +22,8 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <None Include="Data\toy.fs" />
-    <None Include="Data\toyContainer.fs" />
+    <None Include="Data\toy.glsl" />
+    <None Include="Data\toyContainer.slang" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{8AB4CF3D-9824-4390-8569-B07776C4D1F6}</ProjectGuid>

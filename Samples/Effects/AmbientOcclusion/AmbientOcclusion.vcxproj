@@ -22,14 +22,8 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <None Include="Data\AOPrePass.ps.hlsl">
-      <FileType>Document</FileType>
-    </None>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="Data\ApplyAO.ps.hlsl">
-      <FileType>Document</FileType>
-    </None>
+    <None Include="Data\AOPrePass.ps.slang" />
+    <None Include="Data\ApplyAO.ps.slang" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{E6F10A52-9C29-47B0-8BAE-46C146EB7163}</ProjectGuid>

@@ -12,10 +12,10 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <None Include="Data\AOPrePass.ps.hlsl">
+    <None Include="Data\AOPrePass.ps.slang">
       <Filter>Data</Filter>
     </None>
-    <None Include="Data\ApplyAO.ps.hlsl">
+    <None Include="Data\ApplyAO.ps.slang">
       <Filter>Data</Filter>
     </None>
   </ItemGroup>

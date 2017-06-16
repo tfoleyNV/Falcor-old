@@ -142,7 +142,7 @@ void StereoRendering::loadScene(const std::string& filename)
 {
     mpScene = Scene::loadFromFile(filename);
     mpSceneRenderer = SceneRenderer::create(mpScene);
-    mpProgram = GraphicsProgram::createFromFile("", "StereoRendering.ps.hlsl");
+    mpProgram = GraphicsProgram::createFromFile("", "StereoRendering.ps.slang");
     setRenderMode();
     mpProgramVars = GraphicsVars::create(mpProgram->getActiveVersion()->getReflector());
     for (uint32_t m = 0; m < mpScene->getModelCount(); m++)
@@ -157,7 +157,7 @@ void StereoRendering::onLoad()
 
     mpGraphicsState = GraphicsState::create();
 
-    mpBlit = FullScreenPass::create("blit.fs");
+    mpBlit = FullScreenPass::create("blit.fs.slang");
     mpBlitVars = GraphicsVars::create(mpBlit->getProgram()->getActiveVersion()->getReflector());
     setRenderMode();
 

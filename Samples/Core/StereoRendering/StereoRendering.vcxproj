@@ -22,8 +22,8 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <None Include="Data\Blit.fs" />
-    <None Include="Data\StereoRendering.ps.hlsl" />
+    <None Include="Data\Blit.fs.slang" />
+    <None Include="Data\StereoRendering.ps.slang" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{7C6C43DE-EEF4-4165-BE92-ED753D3799EE}</ProjectGuid>

@@ -47,7 +47,7 @@ void ShaderBuffersSample::onLoad()
     mpCamera = Camera::create();
 
     // create the program
-    mpProgram = GraphicsProgram::createFromFile("ShaderBuffers.vs.hlsl", "ShaderBuffers.ps.hlsl");
+    mpProgram = GraphicsProgram::createFromFile("ShaderBuffers.vs.slang", "ShaderBuffers.ps.slang");
 
     // Load the model
     mpModel = Model::createFromFile("teapot.obj");
@@ -94,7 +94,7 @@ void ShaderBuffersSample::onLoad()
     mpDefaultPipelineState->setProgram(mpProgram);
 
     // Compute
-    mpComputeProgram = ComputeProgram::createFromFile("ShaderBuffers.cs.hlsl");
+    mpComputeProgram = ComputeProgram::createFromFile("ShaderBuffers.cs.slang");
     mpComputeState = ComputeState::create();
     mpComputeState->setProgram(mpComputeProgram);
 

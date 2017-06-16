@@ -25,45 +25,66 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ***************************************************************************/
-#include "ShaderCommon.h"
+#include "FeatureDemoCommon.slang.h"
 #include "Shading.h"
-#define _COMPILE_DEFAULT_VS
-#include "VertexAttrib.h"
-#include "Effects/LeanMapData.hlsli"
+#include "Helpers.h"
 
-cbuffer PerFrameCB : register(b0)
+Texture2D gEnvMap;
+SamplerState gSampler;
+
+struct PsOut
 {
-    float3 gAmbient;
+    float4 color : SV_TARGET0;
+    float4 normal : SV_TARGET1;
 };
 
-#ifdef _MS_USER_NORMAL_MAPPING
-Texture2D gLeanMaps[_LEAN_MAP_COUNT] : register(t20);
-SamplerState gSampler : register(s10);
-
-void perturbNormal(in const MaterialData mat, inout ShadingAttribs shAttr, bool forceSample)
+PsOut main(MainVsOut vOut)
 {
-    if (mat.desc.hasNormalMap != 0)
-    {
-        applyLeanMap(gLeanMaps[mat.values.id], gSampler, shAttr);
-    }
-}
-#endif
+    PsOut psOut;
 
-#include "shading.h"
-
-vec4 main(VS_OUT vOut) : SV_TARGET
-{
     ShadingAttribs shAttr;
-    prepareShadingAttribs(gMaterial, vOut.posW, gCam.position, vOut.normalW, vOut.bitangentW, vOut.texC, shAttr);
+    prepareShadingAttribs(gMaterial, vOut.vsData.posW, gCam.position, vOut.vsData.normalW, vOut.vsData.bitangentW, vOut.vsData.texC, shAttr);
 
     ShadingOutput result;
+    result.finalValue = 0;
+    float4 finalColor = 0;
+    float envMapFactor = 1;
 
     [unroll]
     for (uint l = 0; l < _LIGHT_COUNT; l++)
     {
-        evalMaterial(shAttr, gLights[l], result, l == 0);
+        float shadowFactor = 1;
+#ifdef _ENABLE_SHADOWS
+        if (l == 0)
+        {
+            shadowFactor = calcShadowFactor(gCsmData, vOut.shadowsDepthC, shAttr.P, vOut.vsData.posH.xy / vOut.vsData.posH.w);
+            envMapFactor -= 1 - shadowFactor;
+        }
+#endif
+        evalMaterial(shAttr, gLights[l], shadowFactor, result, l == 0);
     }
 
-    vec4 finalColor = vec4(result.finalValue + gAmbient * result.diffuseAlbedo, 1.f);
-    return finalColor;
+    finalColor = vec4(result.finalValue, 1.f);
+
+#ifdef _ENABLE_REFLECTIONS
+    // Calculate the view vector
+    float3 view = reflect(-shAttr.E, shAttr.N);
+    float2 texC = dirToSphericalCrd(view);
+    float rough = shAttr.preparedMat.values.layers[1].albedo.a;
+    uint h,w, mipCount;
+    gEnvMap.GetDimensions(0, h, w, mipCount);
+    float lod = rough * mipCount;
+    float3 envMapVal = gEnvMap.SampleLevel(gSampler, texC, lod).rgb;
+
+    envMapFactor = saturate(envMapFactor + 0.007);
+    finalColor.rgb += (result.specularAlbedo) * envMapVal * envMapFactor * max(1e-3, evalGGXDistribution(float3(0, 0, 1), shAttr.N, rough)) * 0.3;
+#endif
+
+    // add ambient
+    finalColor.rgb += gAmbientLighting * getDiffuseColor(shAttr).rgb;
+    
+    psOut.color = finalColor;
+    psOut.normal = float4(vOut.vsData.normalW * 0.5f + 0.5f, 1.0f);
+
+    return psOut;
 }

@@ -46,9 +46,9 @@ static
 vec3 iMouse = vec3(0, 0, 0);
 
 // ------------------------------------
-// Shader toy code goes inside toy.fs
+// Shader toy code goes inside toy.glsl
 // ------------------------------------
-#include "toy.fs"
+#include "toy.glsl"
 
 #ifdef FALCOR_HLSL
 void main(in vec2 texC : TEXCOORD, out float4 fragColor : SV_TARGET)

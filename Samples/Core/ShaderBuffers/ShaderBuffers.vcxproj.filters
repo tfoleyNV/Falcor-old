@@ -7,19 +7,19 @@
     <ClInclude Include="ShaderBuffers.h" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="Data\ShaderBuffers.cs.hlsl">
-      <Filter>Data</Filter>
-    </None>
-    <None Include="Data\ShaderBuffers.ps.hlsl">
-      <Filter>Data</Filter>
-    </None>
-    <None Include="Data\ShaderBuffers.vs.hlsl">
-      <Filter>Data</Filter>
-    </None>
-  </ItemGroup>
-  <ItemGroup>
     <Filter Include="Data">
       <UniqueIdentifier>{fa3410a7-25f7-42e1-b08c-7dfe082deadd}</UniqueIdentifier>
     </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Data\ShaderBuffers.cs.slang">
+      <Filter>Data</Filter>
+    </None>
+    <None Include="Data\ShaderBuffers.ps.slang">
+      <Filter>Data</Filter>
+    </None>
+    <None Include="Data\ShaderBuffers.vs.slang">
+      <Filter>Data</Filter>
+    </None>
   </ItemGroup>
 </Project>

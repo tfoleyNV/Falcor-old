@@ -78,7 +78,7 @@ void NormalMapFiltering::onLoad()
     }
     mpRenderer = SceneRenderer::create(pScene);
     mpLeanMap = LeanMap::create(pScene.get());
-    mpProgram = GraphicsProgram::createFromFile("", "NormalMapFiltering.ps.hlsl");
+    mpProgram = GraphicsProgram::createFromFile("", "NormalMapFiltering.ps.slang");
     
     Sampler::Desc samplerDesc;
     samplerDesc.setFilterMode(Sampler::Filter::Linear, Sampler::Filter::Linear, Sampler::Filter::Linear);

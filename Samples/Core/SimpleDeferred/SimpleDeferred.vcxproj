@@ -22,8 +22,8 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <None Include="Data\DeferredPass.fs" />
-    <None Include="Data\LightingPass.fs" />
+    <None Include="Data\DeferredPass.fs.slang" />
+    <None Include="Data\LightingPass.fs.slang" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{6E7CBE80-7C06-485B-BEA7-08AEBFE53C22}</ProjectGuid>
