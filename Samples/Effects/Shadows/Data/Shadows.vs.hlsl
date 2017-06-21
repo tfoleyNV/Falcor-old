@@ -32,10 +32,10 @@
 
 cbuffer PerFrameCB : register(b0)
 {
-	vec3 gAmbient;
+	float3 gAmbient;
     CsmData gCsmData[_LIGHT_COUNT];
     bool visualizeCascades;
-    mat4 camVpAtLastCsmUpdate;
+    float4x4 camVpAtLastCsmUpdate;
 };
 
 struct ShadowsVSOut

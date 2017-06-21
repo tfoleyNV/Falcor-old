@@ -32,12 +32,23 @@
 
 #ifdef HOST_CODE
 
+#include "glm/gtx/compatibility.hpp"
+
+using glm::float2;
+using glm::float3;
+using glm::float4;
+
+using glm::float2x2;
+using glm::float3x3;
+using glm::float4x4;
+
 namespace Falcor {
 /*******************************************************************
                     CPU declarations
 *******************************************************************/
     class Sampler;
     class Texture;
+
 
 #elif defined(CUDA_CODE)
 /*******************************************************************
@@ -77,16 +88,8 @@ typedef TexPtr BufPtr;
 /*******************************************************************
                     HLSL declarations
 *******************************************************************/
-typedef float2 vec2;
-typedef float3 vec3;
-typedef float4 vec4;
-typedef float3x3 mat3;
-typedef float4x4 mat4;
-typedef uint uint32_t;
+ypedef uint uint32_t;
 typedef int int32_t;
-typedef vec2 v2;
-typedef vec3 v3;
-typedef vec4 v4;
 #endif
 
 

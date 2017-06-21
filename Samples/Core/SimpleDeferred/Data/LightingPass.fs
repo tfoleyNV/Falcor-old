@@ -56,7 +56,7 @@ float4 main(float2 texC : TEXCOORD, float4 pos : SV_POSITION) : SV_TARGET
     // Fetch a G-Buffer
     const vec3 posW    = gGBuf0.Load(int3(pos.xy, 0)).rgb;
     const vec3 normalW = gGBuf1.Load(int3(pos.xy, 0)).rgb;
-    const vec4 albedo  = gGBuf2.Load(int3(pos.xy, 0));
+    const float4 albedo  = gGBuf2.Load(int3(pos.xy, 0));
 
     // Discard empty pixels
     if(any(albedo.a <= 0))
