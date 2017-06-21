@@ -28,14 +28,15 @@
 
 cbuffer PerImageCB : register(b0)
 {
-	sampler2D gTexture;
+	Texture2D		gTexture;
+	SamplerState	gSampler;
 };
 
 static const float3 gLuminance = float3(0.2126, 0.7152, 0.0722);
 
 float4 calcColor(float2 texC)
 {
-	float4 fragColor = texture(gTexture, texC);
+	float4 fragColor = gTexture.Sample(gSampler, texC);
 	fragColor.rgb = (dot(fragColor.rgb, gLuminance)).xxx;
 	return fragColor;
 }

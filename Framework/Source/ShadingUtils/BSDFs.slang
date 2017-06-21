@@ -140,7 +140,7 @@ float _fn evalBeckmannDistribution(in const float3 N, in const float3 H, in floa
 float _fn evalBeckmannDistribution(in const float3 H, in const float2 rgns)
 {
     const float NoH2 = H.z * H.z;
-    const float2 Hproj = v2(H.x, H.y);
+    const float2 Hproj = float2(H.x, H.y);
     // Compute Beckmann distribution
     const float exponent = dot(Hproj / (rgns*rgns), Hproj) / NoH2;
     return exp(-exponent) / (M_PIf * rgns.x * rgns.y * NoH2 * NoH2);
@@ -194,8 +194,8 @@ float _fn evalGGXDistribution(in const float3 H, in const float2 rgns)
     const float anisoV = rgns.x < rgns.y ? rgns.x / rgns.y : 1.f;
     const float r = min(rgns.x, rgns.y);
     const float NoH2 = H.z * H.z;
-    const float2 Hproj = v2(H.x, H.y);
-    const float exponent = dot(Hproj / v2(anisoU*anisoU, anisoV*anisoV), Hproj);
+    const float2 Hproj = float2(H.x, H.y);
+    const float exponent = dot(Hproj / float2(anisoU*anisoU, anisoV*anisoV), Hproj);
     const float root = NoH2 * r*r + exponent;
     return r*r / (M_PIf * anisoU * anisoV * root * root);
 }
@@ -213,7 +213,7 @@ returns effective visible roughness
 float _fn effectiveVisibleRoughness(const in float3 dir, const in float2 rghns)
 {
     const float recipSinThSq = 1.f / (1.f - dir.z * dir.z);
-    const float2 dirPlane = v2(dir.x, dir.y);
+    const float2 dirPlane = float2(dir.x, dir.y);
     const float2 cosSinPhiSq = dirPlane * dirPlane * recipSinThSq;
     const float2 res = rghns * rghns * cosSinPhiSq;
     return sqrt(res.x + res.y);
@@ -248,7 +248,7 @@ float _fn GSmith(const in float3 dir, const in float3 h, const in float2 rghns, 
 
     // Otherwise it's GGX, use GGX shadowing/masking
     const float isectRoot = alpha * recipSlope;
-    return 2.f / (1.f + length(v2(1.f, isectRoot)));
+    return 2.f / (1.f + length(float2(1.f, isectRoot)));
 }
 
 /**
@@ -258,8 +258,8 @@ float _fn evalMicrofacetTerms(in const float3 T, in const float3 B, in const flo
     in const float3 h, in const float3 V, in const float3 L,
     in const float2 roughness, in const uint ndfType, bool transmissive)
 {
-    const float3 lTg = v3(dot(T, L), dot(B, L), dot(N, L));
-    const float3 vTg = v3(dot(T, V), dot(B, V), dot(N, V));
+    const float3 lTg = float3(dot(T, L), dot(B, L), dot(N, L));
+    const float3 vTg = float3(dot(T, V), dot(B, V), dot(N, V));
 
     /* If it's not transmission, they should be on the same side of the hemisphere */
     if(!transmissive && lTg.z*vTg.z <= 0.f)

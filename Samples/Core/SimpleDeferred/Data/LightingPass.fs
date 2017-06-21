@@ -42,7 +42,7 @@ cbuffer PerImageCB
     // Lighting params
 	LightData gDirLight;
 	LightData gPointLight;
-	vec3 gAmbient;
+	float3 gAmbient;
     // Debug mode
 	uint gDebugMode;
 };
@@ -54,8 +54,8 @@ Texture2D gGBuf2;
 float4 main(float2 texC : TEXCOORD, float4 pos : SV_POSITION) : SV_TARGET
 {
     // Fetch a G-Buffer
-    const vec3 posW    = gGBuf0.Load(int3(pos.xy, 0)).rgb;
-    const vec3 normalW = gGBuf1.Load(int3(pos.xy, 0)).rgb;
+    const float3 posW    = gGBuf0.Load(int3(pos.xy, 0)).rgb;
+    const float3 normalW = gGBuf1.Load(int3(pos.xy, 0)).rgb;
     const float4 albedo  = gGBuf2.Load(int3(pos.xy, 0));
 
     // Discard empty pixels

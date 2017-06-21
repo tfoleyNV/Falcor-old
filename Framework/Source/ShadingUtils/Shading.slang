@@ -90,14 +90,14 @@ struct ShadingOutput
 #ifdef CUDA_CODE
     _fn ShadingOutput()
     {
-        diffuseAlbedo = v3(0.f);
-        diffuseIllumination = v3(0.f);
-        specularAlbedo = v3(0.f);
-        specularIllumination = v3(0.f);
-        finalValue = v3(0.f);
-        wi = v3(0.f);
+        diffuseAlbedo = float3(0.f);
+        diffuseIllumination = float3(0.f);
+        specularAlbedo = float3(0.f);
+        specularIllumination = float3(0.f);
+        finalValue = float3(0.f);
+        wi = float3(0.f);
         pdf = 0.f;
-        thp = v3(0.f);
+        thp = float3(0.f);
     }
 #endif
 };
@@ -232,7 +232,7 @@ float4 _fn evalDiffuseLayer(in const MaterialLayerValues layer, in const float3 
 #else
     value = 0;
 #endif
-    return v4(value, weight);
+    return float4(value, weight);
 }
 
 // Implementation of NDF filtering code from the HPG'16 submission
@@ -245,7 +245,7 @@ float2 _fn filterRoughness(in const ShadingAttribs shAttr, in const LightAttribs
 #else
     // Compute half-vector derivatives
     float3  H = normalize(shAttr.E + lAttr.L);
-    float2  hpp = v2(dot(H, shAttr.T), dot(H, shAttr.B));
+    float2  hpp = float2(dot(H, shAttr.T), dot(H, shAttr.B));
     float2  hppDx = ddx_fine(hpp);
     float2  hppDy = ddy_fine(hpp);
 #endif
@@ -281,7 +281,7 @@ float4 _fn evalSpecularLayer(in const MaterialLayerDesc desc, in const MaterialL
     float2 roughness;
     if(desc.hasTexture & ROUGHNESS_CHANNEL_BIT)
     {
-        roughness = v2(data.albedo.w, data.albedo.w);
+        roughness = float2(data.albedo.w, data.albedo.w);
     }
     else
     {
@@ -302,7 +302,7 @@ float4 _fn evalSpecularLayer(in const MaterialLayerDesc desc, in const MaterialL
     
     // compute halfway vector
     const float3 hW = normalize(shAttr.E + lAttr.L);
-    const float3 h = normalize(v3(dot(hW, shAttr.T), dot(hW, shAttr.B), dot(hW, shAttr.N)));
+    const float3 h = normalize(float3(dot(hW, shAttr.T), dot(hW, shAttr.B), dot(hW, shAttr.N)));
 
     result.roughness = roughness;
 
@@ -336,7 +336,7 @@ float4 _fn evalSpecularLayer(in const MaterialLayerDesc desc, in const MaterialL
 
     result.specularIllumination += value;
 
-    return v4(value, weight);
+    return float4(value, weight);
 #else
     return 0;
 #endif
@@ -501,10 +501,10 @@ void _fn initDiffuseLayer(_ref(MaterialLayerDesc) desc, _ref(MaterialLayerValues
     desc.blending = BlendAdd;
     desc.hasTexture = false;
     desc.ndf = NDFGGX;
-    data.albedo = v4(albedo, 1.f);
-    data.extraParam = v4(0,0,0,0);
-    data.roughness = v4(0,0,0,0);
-    data.pad = v3(0,0,0);
+    data.albedo = float4(albedo, 1.f);
+    data.extraParam = float4(0,0,0,0);
+    data.roughness = float4(0,0,0,0);
+    data.pad = float3(0,0,0);
     data.pmf = 1;
 }
 
@@ -515,7 +515,7 @@ void _fn initConductorLayer(_ref(MaterialLayerDesc) desc, _ref(MaterialLayerValu
 {
     desc.type = MatConductor;
     desc.blending = BlendAdd;
-    data.albedo = v4(color, 1.f);
+    data.albedo = float4(color, 1.f);
     data.roughness = roughness.rrrr;
     data.extraParam.x = IoR;
     data.extraParam.y = kappa;
@@ -529,7 +529,7 @@ void _fn initDielectricLayer(_ref(MaterialLayerDesc) desc, _ref(MaterialLayerVal
 {
     desc.type = MatDielectric;
     desc.blending = BlendFresnel;
-    data.albedo = v4(color, 1.f);
+    data.albedo = float4(color, 1.f);
     data.roughness = roughness.rrrr;
     data.extraParam.x = IoR;
     data.pmf = 1;
@@ -663,7 +663,7 @@ void _fn sampleMaterial(
 
 			float3 m;
 			const float3 wo = toLocal(shAttr.E, shAttr.T, shAttr.B, shAttr.N);
-			const float2 roughness = v2(specData.roughness.x, specData.roughness.y);
+			const float2 roughness = float2(specData.roughness.x, specData.roughness.y);
 
 			// Set the specular reflectivity
 			result.specularAlbedo = specData.albedo.rgb;

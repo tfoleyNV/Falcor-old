@@ -65,7 +65,7 @@ inline float3 _fn getLightPos(in const LightData Light, in const float3 shadingP
     float3 lightPos = Light.worldPos;
     if(Light.type == LightArea)
     {
-        lightPos = mul(Light.transMat, v4(lightPos, 1.0)).xyz;
+        lightPos = mul(Light.transMat, float4(lightPos, 1.0)).xyz;
     }    
     else if(Light.type == LightDirectional)
     {
@@ -167,7 +167,7 @@ inline void _fn prepareLightAttribs(in const LightData Light, in const ShadingAt
 			float3 p0 = float3(vertices[index * 3 + 0], vertices[index * 3 + 1], vertices[index * 3 + 2]);
 #endif
 			// Apply model instance transformation matrix
-			LightAttr.points[index] = v3(mul(Light.transMat, v4(p0, 1.0)));
+			LightAttr.points[index] = float3(mul(Light.transMat, float4(p0, 1.0)));
 		}
 	}
 #endif
@@ -245,13 +245,13 @@ void _fn sampleLight(in const float3 shadingHitPos, in const LightData lData, co
 #endif
 
 				// Apply model instance transformation matrix
-				p0 = v3(mul(lData.transMat, v4(p0, 1.0)));
-				p1 = v3(mul(lData.transMat, v4(p1, 1.0)));
-				p2 = v3(mul(lData.transMat, v4(p2, 1.0)));
+				p0 = float3(mul(lData.transMat, float4(p0, 1.0)));
+				p1 = float3(mul(lData.transMat, float4(p1, 1.0)));
+				p2 = float3(mul(lData.transMat, float4(p2, 1.0)));
 
 				// Sample a point on the triangle mesh using barycentric coordinates
 				float a = sqrt(rSample.x);
-				const float2 bary = v2(1.f - a, a * rSample.y);
+				const float2 bary = float2(1.f - a, a * rSample.y);
 
 				lAttr.P = p0 * bary.x + p1 * bary.y + p2 * (1.f - bary.x - bary.y);
 
@@ -271,7 +271,7 @@ void _fn sampleLight(in const float3 shadingHitPos, in const LightData lData, co
 			if (lAttr.pdf > 0.f && dot(lAttr.N, lAttr.L) < 0.f)
 				lAttr.lightIntensity /= lAttr.pdf;
 			else
-				lAttr.lightIntensity = v3(0.f);
+				lAttr.lightIntensity = float3(0.f);
 		}
 		break;
 #endif
@@ -287,12 +287,12 @@ void _fn stratifiedSampleRectangularAreaLight(in const float3 shadingHitPos, in 
 		return;
 
 	// Transform light position and light normal
-	float3 lightPos = mul(lData.transMat, v4(lData.worldPos, 1.0f)).rgb;
-	lAttr.N = mul(lData.transMat, v4(lData.worldDir, 0.0f)).rgb;
+	float3 lightPos = mul(lData.transMat, float4(lData.worldPos, 1.0f)).rgb;
+	lAttr.N = mul(lData.transMat, float4(lData.worldDir, 0.0f)).rgb;
 
 	// Transform tangent frame
-	float3 transformedTangent = mul(lData.transMat, v4(lData.tangent, 0.0f)).rgb;
-	float3 transformedBitangent = mul(lData.transMat, v4(lData.bitangent, 0.0f)).rgb;
+	float3 transformedTangent = mul(lData.transMat, float4(lData.tangent, 0.0f)).rgb;
+	float3 transformedBitangent = mul(lData.transMat, float4(lData.bitangent, 0.0f)).rgb;
 
 	float lightSizeY1 = length(transformedTangent);
 	float lightSizeY2 = length(transformedBitangent);

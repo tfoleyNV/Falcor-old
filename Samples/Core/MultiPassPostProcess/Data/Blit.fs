@@ -28,12 +28,13 @@
 
 cbuffer PerImageCB : register(b0)
 {
-	sampler2D gTexture;
+	Texture2D		gTexture;
+	SamplerState	gSampler;
 };
 
 float4 calcColor(float2 texC)
 {
-	return texture(gTexture, texC);
+	return gTexture.Sample(gSampler, texC);
 }
 
 float4 main(float2 texC  : TEXCOORD) : SV_TARGET0

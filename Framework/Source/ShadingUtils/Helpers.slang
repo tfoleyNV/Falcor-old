@@ -165,7 +165,7 @@ _fn float3 refract(const float3 I, const float3 N, float eta)
     float3 R;
     if (k < 0.0f) 
     {
-        R = v3(0.0f, 0.0f, 0.0f);
+        R = float3(0.0f, 0.0f, 0.0f);
     }
     else 
     {
@@ -181,15 +181,15 @@ _fn float3 refract(const float3 I, const float3 N, float eta)
 void _fn createTangentFrame(in const float3 normal, _ref(float3) bitangent)
 {
 	if(abs(normal.x) > abs(normal.y))
-		bitangent = v3(normal.z, 0.f, -normal.x) / length(v2(normal.x, normal.z));
+		bitangent = float3(normal.z, 0.f, -normal.x) / length(float2(normal.x, normal.z));
 	else
-		bitangent = v3(0.f, normal.z, -normal.y) / length(v2(normal.y, normal.z));
+		bitangent = float3(0.f, normal.z, -normal.y) / length(float2(normal.y, normal.z));
 }
 
 void _fn reflectFrame(float3 n, float3 reflect, _ref(float3) t, _ref(float3) b)
 {
     if(abs(dot(n, reflect)) > 0.999f)
-        reflect = abs(n.z) < .8f ? v3(0.f, 0.f, 1.f) : v3(1.f, 0.f, 0.f);
+        reflect = abs(n.z) < .8f ? float3(0.f, 0.f, 1.f) : float3(1.f, 0.f, 0.f);
     b = normalize(cross(n, reflect));
     t = cross(b, n);
 }
@@ -256,7 +256,7 @@ float3 _fn fromLocal(in float3 v, in float3 t, in float3 b, in float3 n)
 
 float3 _fn toLocal(in float3 v, in float3 t, in float3 b, in float3 n)
 {
-    return v3(dot(v, t), dot(v, b), dot(v, n));
+    return float3(dot(v, t), dot(v, b), dot(v, n));
 }
 
 void _fn applyNormalMap(in float3 texValue, _ref(float3) n, _ref(float3) t, _ref(float3) b)
